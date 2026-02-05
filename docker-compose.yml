@@ -1,0 +1,131 @@
+# Scanner v3.2.0 - Docker Compose Configuration
+# Deploys API server, Dashboard, Redis, MinIO, and optional services
+
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scanner-api
+    ports:
+      - "8000:8000"
+    environment:
+      - SCANNER_API_KEY=${SCANNER_API_KEY:-scanner-prod-key-2026}
+      - SCANNER_SECRET_KEY=${SCANNER_SECRET_KEY:-change-this-secret-in-production}
+      - REDIS_URL=redis://redis:6379/0
+      - S3_ENDPOINT_URL=http://minio:9000
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER:-scanner}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD:-scanner2026}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-scanner-analyses}
+    volumes:
+      - ./weights:/app/weights:ro
+      - scanner-temp:/tmp/scanner
+      - scanner-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  # Streamlit Dashboard
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scanner-dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      - SCANNER_API_URL=http://api:8000
+    volumes:
+      - ./weights:/app/weights:ro
+      - scanner-temp:/tmp/scanner
+    command: ["streamlit", "run", "dashboard.py", "--server.port=8501", "--server.headless=true", "--server.address=0.0.0.0"]
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  # Nginx Reverse Proxy (Production)
+  nginx:
+    image: nginx:alpine
+    container_name: scanner-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+      - dashboard
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # Redis Cache (for rate limiting & sessions)
+  redis:
+    image: redis:7-alpine
+    container_name: scanner-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # MinIO (S3-compatible object storage)
+  minio:
+    image: minio/minio:latest
+    container_name: scanner-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-scanner}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-scanner2026}
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - production
+
+volumes:
+  scanner-temp:
+  scanner-data:
+  redis-data:
+  minio-data:
+
+networks:
+  default:
+    name: scanner-network
