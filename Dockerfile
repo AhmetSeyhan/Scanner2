@@ -6,12 +6,13 @@ FROM python:3.12-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV SCANNER_API_KEY=scanner-prod-key-change-me
-ENV SCANNER_SECRET_KEY=change-this-to-a-secure-random-string
+# These MUST be set at runtime via docker run -e or docker-compose .env
+# ENV SCANNER_API_KEY=
+# ENV SCANNER_SECRET_KEY=
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
