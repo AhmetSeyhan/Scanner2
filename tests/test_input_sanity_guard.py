@@ -22,13 +22,26 @@ class TestInputSanityGuard:
 
     @pytest.fixture
     def valid_frames(self):
-        """Generate valid video frames."""
+        """Generate valid video frames with realistic inter-frame variation.
+
+        Simulates a talking-head video with global brightness fluctuation
+        and a large moving region, so ~5-15% of pixels change by >10 per frame.
+        """
+        rng = np.random.RandomState(42)
         frames = []
+        base = rng.randint(100, 160, (480, 640, 3), dtype=np.uint8)
         for i in range(30):
-            # Simulate natural frame-to-frame changes
-            base = np.random.randint(100, 150, (480, 640, 3), dtype=np.uint8)
-            noise = np.random.randint(-5, 5, (480, 640, 3), dtype=np.int16)
-            frame = np.clip(base.astype(np.int16) + noise + i, 0, 255).astype(np.uint8)
+            frame = base.copy()
+            # Global brightness oscillation (like lighting changes)
+            brightness = int(12 * np.sin(i * 0.5))
+            frame = np.clip(frame.astype(np.int16) + brightness, 0, 255).astype(np.uint8)
+            # Large moving region (face-sized area shifting)
+            y_off = 80 + i * 4
+            x_off = 150 + i * 3
+            frame[y_off:y_off + 200, x_off:x_off + 200] = np.clip(
+                frame[y_off:y_off + 200, x_off:x_off + 200].astype(np.int16) + 25,
+                0, 255
+            ).astype(np.uint8)
             frames.append(frame)
         return frames
 

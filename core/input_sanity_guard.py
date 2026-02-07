@@ -158,7 +158,7 @@ class InputSanityGuard:
 
         # Score: penalize extremes
         score = 1.0
-        if avg_diff > 0.5 or avg_diff < 0.01:
+        if avg_diff > self.MAX_FRAME_DIFF_RATIO or avg_diff < self.MIN_FRAME_DIFF_RATIO:
             score *= 0.5
         if std_diff > 0.2:
             score *= 0.7

@@ -292,6 +292,24 @@ class WeightManager:
 
             self._stop_event.wait(interval)
 
+    def list_available_weights(self) -> list:
+        """List available weight files in weights directory."""
+        if not self.weights_dir.exists():
+            return []
+        return [
+            f.name for f in self.weights_dir.iterdir()
+            if f.is_file() and f.suffix in ('.pth', '.pt', '.onnx', '.tflite')
+        ]
+
+    def get_weight_path(self, filename: str) -> Optional[Path]:
+        """
+        Get full path for a weight file.
+
+        Returns None if the file does not exist.
+        """
+        filepath = self.weights_dir / filename
+        return filepath if filepath.exists() else None
+
     def get_status(self) -> Dict[str, Any]:
         """Get current status of weight manager."""
         return {

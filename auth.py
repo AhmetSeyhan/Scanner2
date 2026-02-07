@@ -16,12 +16,29 @@ from pydantic import BaseModel
 
 
 # Configuration
-SECRET_KEY = os.getenv("SCANNER_SECRET_KEY", secrets.token_urlsafe(32))
+_default_secret = secrets.token_urlsafe(32)
+SECRET_KEY = os.getenv("SCANNER_SECRET_KEY", _default_secret)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
 # API Key for simple authentication (alternative to JWT)
-API_KEY = os.getenv("SCANNER_API_KEY", "scanner-dev-key-2026")
+API_KEY = os.getenv("SCANNER_API_KEY", secrets.token_urlsafe(24))
+
+# Production safety checks
+if SECRET_KEY == _default_secret:
+    import warnings
+    warnings.warn(
+        "SCANNER_SECRET_KEY not set — using a random ephemeral key. "
+        "Tokens will not survive restarts. Set SCANNER_SECRET_KEY in your environment.",
+        stacklevel=2,
+    )
+if not os.getenv("SCANNER_API_KEY"):
+    import warnings
+    warnings.warn(
+        "SCANNER_API_KEY not set — a random API key was generated. "
+        "Set SCANNER_API_KEY in your environment for stable access.",
+        stacklevel=2,
+    )
 
 # Security schemes
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -55,33 +72,88 @@ class UserInDB(User):
     hashed_password: str
 
 
-# Demo users database (replace with real database in production)
-DEMO_USERS_DB = {
-    "admin": {
-        "username": "admin",
-        "email": "admin@scanner.ai",
-        "full_name": "Scanner Admin",
-        "disabled": False,
-        "hashed_password": pwd_context.hash("scanner2026"),
-        "scopes": ["read", "write", "admin"]
-    },
-    "analyst": {
-        "username": "analyst",
-        "email": "analyst@scanner.ai",
-        "full_name": "Security Analyst",
-        "disabled": False,
-        "hashed_password": pwd_context.hash("analyst2026"),
-        "scopes": ["read", "write"]
-    },
-    "viewer": {
-        "username": "viewer",
-        "email": "viewer@scanner.ai",
-        "full_name": "Read-Only User",
-        "disabled": False,
-        "hashed_password": pwd_context.hash("viewer2026"),
-        "scopes": ["read"]
-    }
-}
+# User database — configure via environment variables for production.
+# Set SCANNER_ADMIN_PASSWORD (required) to enable the admin account.
+# Falls back to demo accounts ONLY when SCANNER_ENV != "production".
+def _build_users_db() -> dict:
+    """Build user database from environment or demo defaults."""
+    db = {}
+    admin_pw = os.getenv("SCANNER_ADMIN_PASSWORD")
+    analyst_pw = os.getenv("SCANNER_ANALYST_PASSWORD")
+    viewer_pw = os.getenv("SCANNER_VIEWER_PASSWORD")
+    is_production = os.getenv("SCANNER_ENV", "").lower() == "production"
+
+    if admin_pw:
+        db["admin"] = {
+            "username": "admin",
+            "email": os.getenv("SCANNER_ADMIN_EMAIL", "admin@scanner.ai"),
+            "full_name": "Scanner Admin",
+            "disabled": False,
+            "hashed_password": pwd_context.hash(admin_pw),
+            "scopes": ["read", "write", "admin"],
+        }
+    if analyst_pw:
+        db["analyst"] = {
+            "username": "analyst",
+            "email": os.getenv("SCANNER_ANALYST_EMAIL", "analyst@scanner.ai"),
+            "full_name": "Security Analyst",
+            "disabled": False,
+            "hashed_password": pwd_context.hash(analyst_pw),
+            "scopes": ["read", "write"],
+        }
+    if viewer_pw:
+        db["viewer"] = {
+            "username": "viewer",
+            "email": os.getenv("SCANNER_VIEWER_EMAIL", "viewer@scanner.ai"),
+            "full_name": "Read-Only User",
+            "disabled": False,
+            "hashed_password": pwd_context.hash(viewer_pw),
+            "scopes": ["read"],
+        }
+
+    if not db and not is_production:
+        # Development-only demo accounts
+        db = {
+            "admin": {
+                "username": "admin",
+                "email": "admin@scanner.ai",
+                "full_name": "Scanner Admin",
+                "disabled": False,
+                "hashed_password": pwd_context.hash("scanner2026"),
+                "scopes": ["read", "write", "admin"],
+            },
+            "analyst": {
+                "username": "analyst",
+                "email": "analyst@scanner.ai",
+                "full_name": "Security Analyst",
+                "disabled": False,
+                "hashed_password": pwd_context.hash("analyst2026"),
+                "scopes": ["read", "write"],
+            },
+            "viewer": {
+                "username": "viewer",
+                "email": "viewer@scanner.ai",
+                "full_name": "Read-Only User",
+                "disabled": False,
+                "hashed_password": pwd_context.hash("viewer2026"),
+                "scopes": ["read"],
+            },
+        }
+        import warnings
+        warnings.warn(
+            "Using demo credentials. Set SCANNER_ADMIN_PASSWORD for production.",
+            stacklevel=2,
+        )
+    elif not db and is_production:
+        raise RuntimeError(
+            "SCANNER_ENV=production but no user passwords configured. "
+            "Set SCANNER_ADMIN_PASSWORD to create the admin account."
+        )
+
+    return db
+
+
+DEMO_USERS_DB = _build_users_db()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

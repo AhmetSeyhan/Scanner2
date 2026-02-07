@@ -526,6 +526,6 @@ class AlignmentCore:
             av_alignment_score=av_score,
             phoneme_viseme_score=pv_score,
             lip_closure_events=closure_events[:10],  # First 10 events
-            speech_rhythm_score=av_details.get("speech_rhythm_ratio", 0.0),
+            speech_rhythm_score=min(av_details.get("speech_rhythm_ratio", 0.0), 1.0),
             metadata_integrity=1.0 - metadata_score
         )

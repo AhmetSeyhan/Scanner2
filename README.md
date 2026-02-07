@@ -1,36 +1,61 @@
 <p align="center">
   <strong>SCANNER</strong><br>
-  <em>Enterprise Deepfake Detection Engine</em>
+  <em>Multi-Modal Deepfake Detection Engine</em>
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> |
   <a href="#architecture">Architecture</a> |
-  <a href="#benchmarks">Benchmarks</a> |
   <a href="#api-reference">API</a> |
   <a href="#deployment">Deployment</a> |
   <a href="docs/">Documentation</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.2.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.2.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/python-3.12-green" alt="Python">
   <img src="https://img.shields.io/badge/license-Apache%202.0-orange" alt="License">
-  <img src="https://img.shields.io/badge/coverage-87%25-brightgreen" alt="Coverage">
+  <img src="https://img.shields.io/badge/tests-81%20passed-brightgreen" alt="Tests">
 </p>
 
 ---
 
 ## Overview
 
-Scanner is an enterprise-grade deepfake detection platform built for financial institutions, government agencies, and organizations where media authenticity is critical. The PRIME HYBRID engine combines four independent forensic analysis cores to detect AI-generated and manipulated video content with high precision and full explainability.
+Scanner is a multi-modal deepfake detection platform designed for financial institutions, KYC/identity verification, and organizations where media authenticity is critical.
 
-**Key Differentiators:**
-- **Multi-modal analysis** - Biological signals, generative fingerprints, and audio-visual alignment analyzed independently
-- **Explainable verdicts** - Every decision includes a transparency report detailing which signals drove the verdict
-- **High precision** - Conservative thresholds prioritize minimizing false positives (designed for <2% FPR)
-- **Adversarial-resistant** - InputSanityGuard pre-screens for evasion attacks before analysis
-- **No raw data retention** - Uploaded media is deleted immediately after analysis
+The **PRIME HYBRID** engine analyzes video through four independent forensic signal domains — biological signals (rPPG), generative model fingerprints (FFT/spectral), audio-visual alignment, and audio quality — then combines results through a weighted fusion engine with full verdict explainability.
+
+### What Scanner Does
+
+- **Frame-Level Visual Detection** — EfficientNet-B0 backbone trained on FaceForensics++ classifies individual frames as real or manipulated.
+- **Biological Signal Analysis (BioSignalCore)** — Extracts remote photoplethysmography (rPPG) signals from 32 facial ROIs and checks cross-correlation for biological consistency.
+- **Generative Fingerprint Detection (ArtifactCore)** — Analyzes frequency domain (FFT) for GAN grid artifacts, diffusion noise patterns, and VAE blur signatures. Includes temporal warping detection via optical flow.
+- **Audio-Visual Alignment (AlignmentCore)** — Checks lip movement patterns for speech rhythm consistency and phoneme-viseme timing plausibility.
+- **Fusion Engine** — Combines all core results with dynamic weight redistribution based on input quality (resolution, audio SNR). Produces a single explainable verdict.
+
+### Design Principles
+
+- **High precision over high recall** — Conservative thresholds minimize false positives. Better to say "uncertain" than to falsely accuse.
+- **No single core decides alone** — The MANIPULATED verdict requires multi-core agreement.
+- **Full explainability** — Every verdict includes a transparency report: which signals drove the decision, what weights were used, and why.
+- **No raw data retention** — Uploaded media is deleted immediately after analysis. Only the verdict and metadata are stored.
+
+### Current Maturity
+
+| Capability | Status | Notes |
+|-----------|--------|-------|
+| Frame-level visual classification | **Production** | EfficientNet-B0 with optional FaceForensics++ weights |
+| Generative fingerprint analysis | **Beta** | FFT/spectral heuristics, validated on synthetic data |
+| Biological signal analysis (rPPG) | **Beta** | Works best on 480p+ video at 24+ fps |
+| Audio-visual alignment | **Beta** | Lip movement pattern analysis; no phoneme-level ASR |
+| Multi-modal fusion | **Beta** | Weighted fusion with dynamic redistribution |
+| Adversarial input guard | **Beta** | Frame consistency and gradient analysis |
+| API + Auth + Rate limiting | **Production** | JWT + API key, slowapi |
+| PDF forensic reports | **Production** | SHA-256 hashed, ReportLab |
+| Docker deployment | **Production** | Multi-service compose with Redis |
+
+> **Note on "Beta" cores:** The signal processing algorithms (rPPG, FFT artifacts, lip-sync) implement peer-reviewed techniques but have not yet been validated against large-scale benchmark datasets with controlled methodology. Accuracy numbers will be published after formal evaluation. See [Validation Roadmap](#validation-roadmap) below.
 
 ## Quick Start
 
@@ -42,78 +67,59 @@ Scanner is an enterprise-grade deepfake detection platform built for financial i
 ### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/AhmetSeyhan/Scanner2.git
 cd Scanner2
 
-# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
-# venv\Scripts\activate   # Windows
 
-# Install dependencies
 pip install -r requirements.txt
 
-# Download model weights (optional - falls back to ImageNet)
+# Optional: download pre-trained deepfake weights
 python download_weights.py
 ```
 
-### Run the API Server
+### Configuration
 
 ```bash
-# Start the API (default: http://localhost:8000)
-uvicorn api:app --host 0.0.0.0 --port 8000
-
-# Or run directly
-python api.py
+cp .env.example .env
+# Edit .env — set at minimum:
+#   SCANNER_SECRET_KEY (JWT signing)
+#   SCANNER_API_KEY (service auth)
+#   SCANNER_ADMIN_PASSWORD (admin account)
 ```
 
-### Run the Dashboard
+### Run
 
 ```bash
+# API server
+uvicorn api:app --host 0.0.0.0 --port 8000
+
+# Dashboard (separate terminal)
 streamlit run dashboard.py
 ```
 
-### Quick API Test
+### Docker
 
 ```bash
-# Get an auth token
-TOKEN=$(curl -s -X POST http://localhost:8000/auth/token \
-  -d "username=admin&password=scanner2026" | python -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
-
-# Analyze a video
-curl -X POST http://localhost:8000/analyze-video-v2 \
-  -H "Authorization: Bearer $TOKEN" \
-  -F "file=@sample_video.mp4"
-```
-
-### Docker Deployment
-
-```bash
-# Copy environment template
 cp .env.example .env
 # Edit .env with production values
 
-# Start all services (API + Dashboard + Redis)
-docker compose up -d
-
-# With production profile (adds nginx + MinIO)
-docker compose --profile production up -d
+docker compose up -d                              # Development
+docker compose --profile production up -d          # With nginx + MinIO
 ```
 
 ## Architecture
-
-Scanner uses the **PRIME HYBRID** architecture: four independent forensic analysis cores unified by a Fusion Engine.
 
 ```mermaid
 graph TD
     INPUT[Video Input] --> SG[InputSanityGuard]
     SG --> |Valid| PROF[Video Profiler]
-    SG --> |Invalid| REJECT[Reject - Adversarial]
+    SG --> |Rejected| REJECT[Reject]
 
-    PROF --> BIO[BIOSIGNAL CORE<br/>rPPG Analysis]
-    PROF --> ART[ARTIFACT CORE<br/>GAN/Diffusion/VAE]
-    PROF --> ALI[ALIGNMENT CORE<br/>A/V Sync]
+    PROF --> BIO[BIOSIGNAL CORE<br/>32-ROI rPPG]
+    PROF --> ART[ARTIFACT CORE<br/>FFT / Spectral]
+    PROF --> ALI[ALIGNMENT CORE<br/>Lip Movement]
     INPUT --> AUD[AUDIO ANALYZER<br/>SNR Estimation]
 
     BIO --> FE[FUSION ENGINE]
@@ -122,90 +128,49 @@ graph TD
     AUD --> |Weight Adjustment| FE
 
     FE --> V{Verdict}
-    V --> AUTH[AUTHENTIC]
-    V --> UNC[UNCERTAIN]
-    V --> MAN[MANIPULATED]
+    V --> AUTH[AUTHENTIC ≤ 0.30]
+    V --> UNC[UNCERTAIN 0.30–0.50]
+    V --> MAN[MANIPULATED ≥ 0.65]
     V --> INC[INCONCLUSIVE]
 ```
 
 ### Detection Cores
 
-| Core | Method | Key Signals |
-|------|--------|-------------|
-| **BIOSIGNAL** | 32-ROI rPPG extraction | Blood volume pulse, heart rate consistency, cross-correlation |
-| **ARTIFACT** | FFT + spatial analysis | GAN grid patterns, diffusion noise, VAE blur, temporal warping |
-| **ALIGNMENT** | Phoneme-viseme mapping | Lip closure timing, speech rhythm (2-8 syl/sec), A/V sync |
-| **AUDIO** | Spectral analysis | SNR estimation, noise classification, speech detection |
+| Core | Method | Signals Analyzed |
+|------|--------|-----------------|
+| **BIOSIGNAL** | 32-ROI rPPG, Butterworth bandpass, cross-correlation | Blood volume pulse, HR consistency across regions |
+| **ARTIFACT** | 2D FFT, Laplacian blur, kurtosis, optical flow | GAN grid patterns, diffusion noise, VAE blur, temporal warping |
+| **ALIGNMENT** | Mouth region pixel analysis, FFT rhythm detection | Lip closure timing, speech rhythm (2–8 syl/sec), brightness consistency |
+| **AUDIO** | Spectral SNR estimation, ZCR-based VAD | Signal-to-noise ratio, speech presence, noise classification |
 
 ### Fusion Engine
 
-The Fusion Engine combines core results with dynamic weight redistribution:
+- **Weighted average** of core scores (default) or confidence-product mode
+- **Dynamic redistribution**: if a core's confidence < 0.4, half its weight goes to higher-confidence cores
+- **Resolution-aware**: BIOSIGNAL weight reduced for sub-480p (rPPG unreliable)
+- **Audio-aware**: ALIGNMENT weight scaled by audio SNR
+- **Consensus rule**: No single core can trigger MANIPULATED — requires 2+ cores agreeing
 
-- **Low confidence redistribution**: When a core's confidence drops below 0.4, half its weight is proportionally redistributed to higher-confidence cores
-- **Resolution-aware**: BIOSIGNAL weight reduced for sub-480p video (rPPG unreliable at low resolution)
-- **Audio-aware**: ALIGNMENT weight scaled by audio SNR quality
-- **Consensus rules**: No single core can trigger MANIPULATED alone - requires multi-core agreement
-
-**Verdict Thresholds:**
+### Verdict Thresholds
 
 | Verdict | Score Range | Meaning |
 |---------|------------|---------|
-| AUTHENTIC | ≤ 0.30 | No manipulation indicators detected |
-| UNCERTAIN | 0.30 - 0.50 | Anomalies present, manual review recommended |
-| INCONCLUSIVE | 0.50 - 0.65 (low confidence) | Conflicting signals between cores |
+| AUTHENTIC | ≤ 0.30 | No manipulation indicators |
+| UNCERTAIN | 0.30–0.50 | Anomalies present, manual review recommended |
+| INCONCLUSIVE | 0.50–0.65 (low confidence) | Conflicting signals |
 | MANIPULATED | ≥ 0.65 | Multi-core agreement on manipulation |
-
-## Benchmarks
-
-Performance evaluated on standard deepfake detection datasets. Run benchmarks locally:
-
-```bash
-python scripts/benchmark.py --dataset ff++ --data_dir /path/to/faceforensics
-```
-
-### PRIME HYBRID (Fusion) Results
-
-| Dataset | Accuracy | Precision | Recall | F1 | AUC-ROC | FPR@95%TPR |
-|---------|----------|-----------|--------|-----|---------|------------|
-| FaceForensics++ (c23) | 0.9547 | 0.9612 | 0.9489 | 0.9550 | 0.9891 | 0.0234 |
-| FaceForensics++ (c40) | 0.9103 | 0.9245 | 0.8967 | 0.9104 | 0.9672 | 0.0512 |
-| Celeb-DF v2 | 0.9381 | 0.9456 | 0.9312 | 0.9383 | 0.9789 | 0.0298 |
-| DFDC (Preview) | 0.9024 | 0.9178 | 0.8876 | 0.9025 | 0.9601 | 0.0587 |
-| WildDeepfake | 0.8756 | 0.8912 | 0.8623 | 0.8765 | 0.9423 | 0.0734 |
-
-> Benchmarks run on the full PRIME HYBRID pipeline (all 4 cores + Fusion Engine). Results vary by hardware and video quality. Run `scripts/benchmark.py` on your target dataset for site-specific numbers.
-
-### Per-Core Breakdown (FaceForensics++ c23)
-
-| Core | AUC-ROC | Accuracy | Strengths |
-|------|---------|----------|-----------|
-| BIOSIGNAL | 0.9234 | 0.8912 | Best on face-swap (blood flow absent) |
-| ARTIFACT | 0.9567 | 0.9234 | Best on GAN-generated (grid artifacts) |
-| ALIGNMENT | 0.9123 | 0.8845 | Best on lip-sync deepfakes |
-| **FUSION** | **0.9891** | **0.9547** | **Combined > any single core** |
-
-### Inference Performance
-
-| Metric | Value |
-|--------|-------|
-| Average latency (30 frames, CPU) | 2.8s |
-| Average latency (30 frames, GPU) | 0.9s |
-| P95 latency (CPU) | 4.1s |
-| Throughput (GPU, batch) | ~40 videos/min |
 
 ## API Reference
 
-Full OpenAPI documentation at `http://localhost:8000/docs` when server is running.
-
-### Core Endpoints
+Full OpenAPI documentation at `http://localhost:8000/docs`.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/` | None | Health check |
-| `GET` | `/health` | None | Component status |
-| `POST` | `/auth/token` | None | Get JWT token |
+| `GET` | `/` | — | Health check |
+| `GET` | `/health` | — | Component status |
+| `POST` | `/auth/token` | — | Get JWT token |
 | `POST` | `/analyze-video-v2` | `write` | Full PRIME HYBRID analysis |
-| `POST` | `/analyze-video` | `write` | Basic video analysis |
+| `POST` | `/analyze-video` | `write` | Basic visual-only analysis |
 | `POST` | `/analyze-image` | `write` | Single image analysis |
 | `GET` | `/history` | `read` | Recent scan history |
 | `POST` | `/export/pdf/{id}` | `read` | Export PDF report |
@@ -214,12 +179,12 @@ Full OpenAPI documentation at `http://localhost:8000/docs` when server is runnin
 ### Authentication
 
 ```bash
-# JWT Token (recommended)
-curl -X POST /auth/token -d "username=admin&password=scanner2026"
-# Use: Authorization: Bearer <token>
+# JWT Token
+curl -X POST http://localhost:8000/auth/token \
+  -d "username=admin&password=$SCANNER_ADMIN_PASSWORD"
 
-# API Key (service-to-service)
-# Use: X-API-Key: <key>
+# API Key
+curl -H "X-API-Key: $SCANNER_API_KEY" http://localhost:8000/health
 ```
 
 ### Example Response (`/analyze-video-v2`)
@@ -228,7 +193,7 @@ curl -X POST /auth/token -d "username=admin&password=scanner2026"
 {
   "verdict": "MANIPULATED",
   "integrity_score": 28.45,
-  "confidence": 0.8234,
+  "confidence": 0.82,
   "core_scores": {
     "biosignal": 0.72,
     "artifact": 0.81,
@@ -237,8 +202,9 @@ curl -X POST /auth/token -d "username=admin&password=scanner2026"
   "consensus_type": "CONSENSUS_FAIL",
   "leading_core": "artifact",
   "transparency": {
-    "summary": "Manipulation detected. Generative model fingerprints detected",
-    "primary_concern": "Generative model fingerprints detected"
+    "summary": "Manipulation detected. Generative model fingerprints detected.",
+    "primary_concern": "Generative model fingerprints detected",
+    "environmental_factors": ["Low resolution (360p): BIOSIGNAL weight reduced"]
   }
 }
 ```
@@ -247,82 +213,64 @@ curl -X POST /auth/token -d "username=admin&password=scanner2026"
 
 ```
 deepfake_detector/
-├── api.py                      # FastAPI backend
-├── auth.py                     # JWT + API key authentication
+├── api.py                      # FastAPI backend (14 endpoints)
+├── auth.py                     # JWT + API key auth (env-based credentials)
 ├── model.py                    # EfficientNet-B0 detector
 ├── preprocessing.py            # MediaPipe face extraction
 ├── dashboard.py                # Streamlit UI
-├── train.py                    # Training script
 ├── core/                       # PRIME HYBRID engine
 │   ├── biosignal_core.py       # rPPG biological analysis
-│   ├── artifact_core.py        # GAN/Diffusion/VAE detection
-│   ├── alignment_core.py       # A/V synchronization
-│   ├── fusion_engine.py        # Unified decision engine
-│   ├── audio_analyzer.py       # Audio SNR analysis
-│   ├── input_sanity_guard.py   # Adversarial defense
-│   ├── weight_manager.py       # Hot-reload weights
+│   ├── artifact_core.py        # GAN/Diffusion/VAE detection + heatmap
+│   ├── alignment_core.py       # Lip movement / A-V alignment
+│   ├── fusion_engine.py        # Weighted fusion + consensus
+│   ├── audio_analyzer.py       # Audio SNR / speech detection
+│   ├── input_sanity_guard.py   # Adversarial input validation
+│   ├── weight_manager.py       # Hot-reload for weights
 │   └── forensic_types.py       # Shared dataclasses
-├── utils/                      # Enterprise utilities
+├── utils/                      # Enterprise features
 │   ├── history_manager.py      # SQLite scan history
 │   ├── forensic_reporter.py    # PDF report generation
 │   ├── storage_manager.py      # S3/MinIO storage
-│   └── webhook_manager.py      # Async webhooks
-├── tests/                      # Test suite (pytest)
-├── scripts/                    # Benchmark and utilities
-│   └── benchmark.py            # Dataset benchmark runner
-├── docs/                       # MkDocs documentation
+│   └── webhook_manager.py      # Async webhook notifications
+├── tests/                      # pytest suite (81 passing)
+├── scripts/benchmark.py        # Dataset evaluation tool
 ├── Dockerfile                  # Production container
 ├── docker-compose.yml          # Multi-service deployment
-├── requirements.txt            # Python dependencies
-├── LICENSE                     # Apache 2.0
-├── CHANGELOG.md                # Version history
-└── SECURITY.md                 # Security policy
+└── requirements.txt            # Dependencies
 ```
-
-## Deployment
-
-### Docker (Recommended)
-
-```bash
-cp .env.example .env
-# Edit .env with production secrets
-
-docker compose up -d              # Development
-docker compose --profile production up -d  # With nginx + MinIO
-```
-
-### Manual
-
-```bash
-pip install -r requirements.txt
-uvicorn api:app --host 0.0.0.0 --port 8000 --workers 4
-```
-
-### Scaling
-
-See `docs/deployment.md` for horizontal scaling with multiple API workers, Celery task queues, and Kubernetes manifests.
 
 ## Testing
 
 ```bash
-# Run all tests
-pytest tests/ -v
-
-# With coverage
-pytest tests/ -v --cov=core --cov=utils --cov-report=html
-
-# Specific test module
-pytest tests/test_fusion_engine.py -v
+pytest tests/ -v                                   # Run all tests
+pytest tests/ -v --cov=core --cov=utils            # With coverage
+pytest tests/test_fusion_engine.py -v              # Specific module
 ```
 
-## Documentation
+Current status: **81 passed, 25 skipped** (skips are due to optional dependencies like reportlab, mediapipe).
 
-Full documentation in `docs/` directory. Serve locally with MkDocs:
+## Security
 
-```bash
-pip install mkdocs mkdocs-material
-mkdocs serve
-```
+- **Authentication**: JWT (HS256) + API key with scoped access (read/write/admin)
+- **Rate limiting**: slowapi + Redis (configurable, default 10 req/min/IP)
+- **No raw data retention**: uploaded files deleted after analysis
+- **Credential management**: all secrets via environment variables; production mode enforces mandatory configuration
+- **Docker**: non-root user, health checks, resource limits
+
+See [SECURITY.md](SECURITY.md) for the full security policy, threat model, and GDPR/KVKK compliance notes.
+
+## Validation Roadmap
+
+The following evaluation work is planned before production deployment:
+
+- [ ] Run `scripts/benchmark.py` against FaceForensics++ (c23, c40) with controlled methodology
+- [ ] Evaluate on Celeb-DF v2 and DFDC Preview for cross-dataset generalization
+- [ ] Measure per-core contribution (ablation: fusion vs. individual cores)
+- [ ] Establish FPR@95%TPR thresholds for bank KYC use case
+- [ ] Third-party audit of detection accuracy on client-provided video samples
+- [ ] Adversarial robustness testing (FGSM, PGD, patch attacks)
+
+Benchmark results will be published here after formal evaluation. The `scripts/benchmark.py` tool is ready for dataset evaluation — see `docs/benchmarks.md` for usage.
 
 ## License
 
@@ -330,4 +278,4 @@ Copyright 2026 Scanner Technologies. Licensed under the [Apache License 2.0](LIC
 
 ## Support
 
-For enterprise support, custom model training, or on-premise deployment: enterprise@scanner.ai
+For enterprise integration, custom model training, or on-premise deployment inquiries: enterprise@scanner.ai

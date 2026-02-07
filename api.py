@@ -226,10 +226,8 @@ async def login_for_access_token(
     """
     Authenticate and receive a JWT access token.
 
-    **Demo Credentials:**
-    - admin / scanner2026 (full access)
-    - analyst / analyst2026 (read + write)
-    - viewer / viewer2026 (read only)
+    Configure credentials via environment variables
+    (SCANNER_ADMIN_PASSWORD, SCANNER_ANALYST_PASSWORD, SCANNER_VIEWER_PASSWORD).
     """
     user = authenticate_user(username, password)
     if not user:
