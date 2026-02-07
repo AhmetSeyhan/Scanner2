@@ -1,0 +1,54 @@
+site_name: Scanner Documentation
+site_description: Enterprise Deepfake Detection Engine - Technical Documentation
+site_url: https://docs.scanner.ai
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: blue
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: blue
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.sections
+    - navigation.tabs
+    - content.code.copy
+    - search.suggest
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: installation.md
+    - Quick Start: quickstart.md
+  - Architecture:
+    - Overview: architecture.md
+    - PRIME HYBRID Engine: prime-hybrid.md
+  - API Reference: api.md
+  - Benchmarks: benchmarks.md
+  - Deployment:
+    - Docker: deployment.md
+    - Scaling: scaling.md
+  - Security: security.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - tables
+  - admonitions
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html

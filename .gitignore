@@ -45,3 +45,14 @@ build/
 .pytest_cache/
 htmlcov/
 .coverage
+coverage.xml
+
+# Benchmark output
+docs/assets/benchmark_results.json
+docs/assets/*.png
+
+# MkDocs
+site/
+
+# Celery
+celerybeat-schedule
