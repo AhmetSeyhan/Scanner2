@@ -27,7 +27,7 @@ jobs:
           pip install ruff
 
       - name: Run Ruff linter
-        run: ruff check core/ utils/ api.py auth.py --ignore E501
+        run: ruff check core/ utils/ services/ api.py auth.py worker.py --ignore E501
         continue-on-error: true
 
   test:
@@ -76,7 +76,7 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           pytest tests/ -v --tb=short \
-            --cov=core --cov=utils \
+            --cov=core --cov=utils --cov=services \
             --cov-report=xml:coverage.xml \
             --cov-report=term-missing \
             -m "not slow"
@@ -84,6 +84,8 @@ jobs:
           SCANNER_SECRET_KEY: test-secret-key-for-ci
           SCANNER_API_KEY: test-api-key-for-ci
           SCANNER_ADMIN_PASSWORD: test-admin-pw-for-ci
+          SCANNER_LOG_JSON: "false"
+          SCANNER_LOG_LEVEL: WARNING
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

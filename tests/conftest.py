@@ -11,6 +11,13 @@ import numpy as np
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Ensure structured logging is configured for tests
+os.environ.setdefault("SCANNER_LOG_JSON", "false")
+os.environ.setdefault("SCANNER_LOG_LEVEL", "WARNING")
+os.environ.setdefault("SCANNER_SECRET_KEY", "test-secret-key")
+os.environ.setdefault("SCANNER_API_KEY", "test-api-key")
+os.environ.setdefault("SCANNER_ADMIN_PASSWORD", "test-admin-pw")
+
 from core.forensic_types import (
     VideoProfile, ResolutionTier,
     BioSignalCoreResult, ArtifactCoreResult, AlignmentCoreResult,

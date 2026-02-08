@@ -1,4 +1,4 @@
-# Scanner v3.2.0 - Docker Compose Configuration
+# Scanner v3.3.0 - Docker Compose Configuration
 # Deploys API server, Dashboard, Redis, MinIO, and optional services
 
 version: '3.8'
@@ -15,6 +15,11 @@ services:
     environment:
       - SCANNER_API_KEY=${SCANNER_API_KEY:-scanner-prod-key-2026}
       - SCANNER_SECRET_KEY=${SCANNER_SECRET_KEY:-change-this-secret-in-production}
+      - SCANNER_ADMIN_PASSWORD=${SCANNER_ADMIN_PASSWORD}
+      - SCANNER_ENV=${SCANNER_ENV:-development}
+      - SCANNER_CORS_ORIGINS=${SCANNER_CORS_ORIGINS:-*}
+      - SCANNER_LOG_LEVEL=${SCANNER_LOG_LEVEL:-INFO}
+      - SCANNER_LOG_JSON=true
       - REDIS_URL=redis://redis:6379/0
       - S3_ENDPOINT_URL=http://minio:9000
       - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER:-scanner}
@@ -24,6 +29,7 @@ services:
       - ./weights:/app/weights:ro
       - scanner-temp:/tmp/scanner
       - scanner-data:/app/data
+      - scanner-audit:/home/scanner/.scanner/audit
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -33,6 +39,36 @@ services:
       start_period: 10s
     depends_on:
       - redis
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  # Celery Worker (v3.3.0)
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scanner-worker
+    command: ["celery", "-A", "worker", "worker", "--loglevel=info", "--concurrency=2"]
+    environment:
+      - SCANNER_LOG_LEVEL=${SCANNER_LOG_LEVEL:-INFO}
+      - SCANNER_LOG_JSON=true
+      - REDIS_URL=redis://redis:6379/0
+      - S3_ENDPOINT_URL=http://minio:9000
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER:-scanner}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD:-scanner2026}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-scanner-analyses}
+    volumes:
+      - ./weights:/app/weights:ro
+      - scanner-temp:/tmp/scanner
+    restart: unless-stopped
+    depends_on:
+      - redis
+    profiles:
+      - production
     deploy:
       resources:
         limits:
@@ -82,7 +118,7 @@ services:
     profiles:
       - production
 
-  # Redis Cache (for rate limiting & sessions)
+  # Redis Cache (for rate limiting, sessions, audit stream)
   redis:
     image: redis:7-alpine
     container_name: scanner-redis
@@ -91,7 +127,7 @@ services:
     volumes:
       - redis-data:/data
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -123,6 +159,7 @@ services:
 volumes:
   scanner-temp:
   scanner-data:
+  scanner-audit:
   redis-data:
   minio-data:
 

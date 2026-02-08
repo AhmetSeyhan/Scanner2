@@ -1,5 +1,5 @@
 """
-Scanner Prime - Core Forensic Analysis Modules (v3.2.0)
+Scanner Prime - Core Forensic Analysis Modules (v3.3.0)
 Original Implementation by Scanner Prime Team based on Public Academic Research.
 
 This package contains the three core forensic analysis engines and the unified
@@ -11,10 +11,12 @@ Modules:
 - alignment_core: ALIGNMENT CORE - Phoneme-Viseme mapping and A/V alignment
 - fusion_engine: FUSION ENGINE - Unified decision engine with conflict resolution
 - audio_analyzer: Audio extraction and SNR analysis for adaptive weighting
-- input_sanity_guard: INPUT SANITY GUARD - Adversarial input detection (v3.2.0)
+- input_sanity_guard: INPUT SANITY GUARD - Adversarial input detection
 - forensic_types: Shared dataclasses and type definitions
+- exceptions: Custom exception hierarchy
+- logging_config: Structured JSON logging
 
-Copyright (c) 2026 Scanner Prime Team. All rights reserved.
+Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
 from core.forensic_types import (
@@ -28,7 +30,7 @@ from core.forensic_types import (
     VideoProfile,
     ResolutionTier,
     TransparencyReport,
-    # v3.2.0 new types
+    # v3.2.0 types
     HeatmapCell,
     HeatmapAnalysis,
     SanityCheckResult,
@@ -55,7 +57,7 @@ __all__ = [
     "ResolutionTier",
     "TransparencyReport",
     "AudioProfile",
-    # v3.2.0 new types
+    # v3.2.0 types
     "HeatmapCell",
     "HeatmapAnalysis",
     "SanityCheckResult",
@@ -73,4 +75,4 @@ __all__ = [
     "analyze_video_audio",
 ]
 
-__version__ = "3.2.0"
+__version__ = "3.3.0"
