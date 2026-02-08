@@ -1,8 +1,8 @@
 """
-Scanner Prime - Core Forensic Analysis Modules (v3.3.0)
+Scanner Prime - Core Forensic Analysis Modules (v4.0.0)
 Original Implementation by Scanner Prime Team based on Public Academic Research.
 
-This package contains the three core forensic analysis engines and the unified
+This package contains the core forensic analysis engines and the unified
 fusion engine for deepfake detection.
 
 Modules:
@@ -12,6 +12,9 @@ Modules:
 - fusion_engine: FUSION ENGINE - Unified decision engine with conflict resolution
 - audio_analyzer: Audio extraction and SNR analysis for adaptive weighting
 - input_sanity_guard: INPUT SANITY GUARD - Adversarial input detection
+- text_core: TEXT CORE - AI-generated text detection (v4.0.0)
+- adversarial: Adversarial robustness - FGSM/PGD attacks and training (v4.0.0)
+- threat_registry: Known deepfake generator threat signatures (v4.0.0)
 - forensic_types: Shared dataclasses and type definitions
 - exceptions: Custom exception hierarchy
 - logging_config: Structured JSON logging
@@ -43,6 +46,8 @@ from core.alignment_core import AlignmentCore
 from core.fusion_engine import FusionEngine, FusionMode, create_fusion_verdict
 from core.audio_analyzer import AudioAnalyzer, AudioProfile, analyze_video_audio
 from core.input_sanity_guard import InputSanityGuard
+from core.text_core import TextCore, TextCoreResult
+from core.threat_registry import ThreatSignature, THREAT_REGISTRY, get_recommended_weights
 
 __all__ = [
     # Types
@@ -69,10 +74,16 @@ __all__ = [
     "FusionEngine",
     "AudioAnalyzer",
     "InputSanityGuard",
+    # v4.0.0 modules
+    "TextCore",
+    "TextCoreResult",
+    "ThreatSignature",
+    "THREAT_REGISTRY",
+    "get_recommended_weights",
     # Utilities
     "FusionMode",
     "create_fusion_verdict",
     "analyze_video_audio",
 ]
 
-__version__ = "3.3.0"
+__version__ = "4.0.0"

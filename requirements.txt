@@ -1,4 +1,4 @@
-# Scanner v3.3.0 - Dependencies
+# Scanner v4.0.0 - Dependencies
 # pip install -r requirements.txt
 
 # API Framework
@@ -72,3 +72,13 @@ matplotlib>=3.8.0
 # Documentation (optional)
 # mkdocs>=1.5.0
 # mkdocs-material>=9.5.0
+
+# =============================================================================
+# v4.0.0 ENTERPRISE EXPANSION
+# =============================================================================
+
+# Adversarial Robustness (optional - for adversarial training pipeline)
+# torchattacks>=3.5.0
+
+# Text Analysis (optional - for enhanced TextCore with transformers)
+# transformers>=4.36.0

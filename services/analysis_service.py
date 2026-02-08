@@ -133,6 +133,37 @@ class AnalysisService:
         except Exception as exc:
             raise ProcessingError("fusion", str(exc)) from exc
 
+        # 6b. Generate explainability artifacts (PPG map + heatmap)
+        explainability = {}
+        try:
+            ppg_data = mm.biosignal_core.generate_ppg_map(frames, video_profile.fps)
+            explainability["ppg_map"] = {
+                "mean_ppg_strength": ppg_data["mean_ppg_strength"],
+                "ppg_coverage": ppg_data["ppg_coverage"],
+                "mean_quality": ppg_data["mean_quality"],
+                "grid_size": ppg_data["grid_size"],
+                "status": ppg_data["status"],
+            }
+        except Exception as exc:
+            logger.warning(
+                f"PPG map generation failed: {exc}",
+                extra={"session_id": session_id, "stage": "ppg_map"},
+            )
+
+        try:
+            if artifact_result.heatmap:
+                explainability["artifact_heatmap"] = artifact_result.heatmap.to_dict()
+            elif len(frames) > 0:
+                heatmap = mm.artifact_core.generate_spatial_heatmap(
+                    frames[len(frames) // 2]
+                )
+                explainability["artifact_heatmap"] = heatmap.to_dict()
+        except Exception as exc:
+            logger.warning(
+                f"Heatmap generation failed: {exc}",
+                extra={"session_id": session_id, "stage": "heatmap"},
+            )
+
         duration_ms = (time.time() - start_time) * 1000
 
         # 7. Build response
@@ -198,6 +229,8 @@ class AnalysisService:
             },
             "frames_analyzed": len(frames),
             "duration_ms": round(duration_ms, 1),
+            # Explainability (v4.0.0)
+            "explainability": explainability,
             # Forensic integrity
             "forensic_hashes": hash_chain.summary(),
         }

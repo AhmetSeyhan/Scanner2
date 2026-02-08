@@ -1,9 +1,11 @@
 """
-Scanner API - FastAPI Router Layer (v3.3.0 Enterprise)
+Scanner API - FastAPI Router Layer (v4.0.0 Enterprise)
 Thin routing layer that validates input, delegates to services, and returns responses.
 
 All business logic lives in the services/ directory.
 Model lifecycle is managed by utils/model_manager.py.
+
+v4.0.0: Added /analyze-text endpoint, rate limit tiers, verdict ledger.
 
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
@@ -142,7 +144,7 @@ async def root():
     return {
         "status": "online",
         "service": "Scanner - Advanced Deepfake Detection",
-        "version": "3.3.0",
+        "version": "4.0.0",
         "auth_required": True,
         "docs": "/docs",
     }
@@ -154,7 +156,7 @@ async def health_check():
     mm = ModelManager.get_instance()
     return {
         "status": "healthy" if mm.is_ready else "degraded",
-        "version": "3.3.0",
+        "version": "4.0.0",
         "components": mm.health_status(),
         "enterprise": {
             "rate_limiting": RATE_LIMITING_AVAILABLE,
@@ -470,7 +472,7 @@ async def admin_dashboard(current_user: User = Depends(require_admin)):
     dashboard = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "system_status": "operational" if mm.is_ready else "degraded",
-        "version": "3.3.0",
+        "version": "4.0.0",
         "components": mm.health_status(),
         "enterprise_features": {
             "rate_limiting": RATE_LIMITING_AVAILABLE,
@@ -485,6 +487,65 @@ async def admin_dashboard(current_user: User = Depends(require_admin)):
         dashboard["recent_activity"] = recent
 
     return dashboard
+
+
+# ==================== v4.0.0 ENDPOINTS ====================
+
+
+@app.post("/analyze-text", tags=["Analysis"])
+async def analyze_text(
+    request: Request,
+    text: str = Form(..., min_length=50, max_length=50000),
+    current_user: User = Depends(require_write),
+):
+    """
+    Analyze text for AI-generation indicators.
+
+    Uses statistical linguistic analysis (burstiness, vocabulary richness,
+    n-gram repetition, sentence structure) to detect machine-generated text.
+
+    Requires: `write` scope.
+    """
+    from core.text_core import TextCore
+
+    text_core = TextCore()
+    result = text_core.analyze(text)
+
+    return {
+        "verdict": "AI_GENERATED" if result.score > 0.65 else
+                   "UNCERTAIN" if result.score > 0.35 else "HUMAN_WRITTEN",
+        "score": result.score,
+        "confidence": result.confidence,
+        "status": result.status,
+        "details": result.details,
+        "anomalies": result.anomalies,
+        "analyzed_by": current_user.sub if hasattr(current_user, "sub") else "unknown",
+        "api_version": "v4",
+    }
+
+
+@app.get("/verdict-chain/verify", tags=["Forensic"])
+async def verify_verdict_chain(current_user: User = Depends(require_admin)):
+    """Verify integrity of the verdict blockchain. Requires: `admin` scope."""
+    from utils.verdict_ledger import VerdictLedger
+    ledger = VerdictLedger()
+    return ledger.verify_chain()
+
+
+@app.get("/verdict-chain/export", tags=["Forensic"])
+async def export_verdict_chain(current_user: User = Depends(require_admin)):
+    """Export full verdict blockchain for external audit. Requires: `admin` scope."""
+    from utils.verdict_ledger import VerdictLedger
+    import json
+    ledger = VerdictLedger()
+    return json.loads(ledger.export_chain())
+
+
+@app.get("/threats", tags=["Intelligence"])
+async def list_threats(current_user: User = Depends(require_read)):
+    """List known deepfake generator threats and their forensic signatures. Requires: `read` scope."""
+    from core.threat_registry import list_threats
+    return {"threats": list_threats(), "total": len(list_threats())}
 
 
 # ==================== ENTRY POINT ====================

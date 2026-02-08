@@ -360,6 +360,127 @@ class BioSignalCore:
 
         return heart_rates, hr_consistency, pulse_coverage
 
+    # =========================================================================
+    # v4.0.0 PPG MAP GENERATION (Intel FakeCatcher style)
+    # =========================================================================
+
+    def generate_ppg_map(
+        self,
+        frames: List[np.ndarray],
+        fps: float,
+        grid_size: Tuple[int, int] = (8, 4),
+    ) -> Dict[str, Any]:
+        """
+        Generate a PPG (Photoplethysmography) map for visualization.
+
+        Similar to Intel FakeCatcher's PPG map output - shows spatial
+        distribution of blood flow signal quality across the face.
+
+        Args:
+            frames: Video frames (BGR).
+            fps: Video frame rate.
+            grid_size: Grid dimensions for the PPG map (rows, cols).
+
+        Returns:
+            Dict with ppg_map, quality_map, hr_map, coherence_map and metadata.
+        """
+        rows, cols = grid_size
+        if len(frames) < 30:
+            return {
+                "ppg_map": np.zeros((rows, cols), dtype=np.float32).tolist(),
+                "quality_map": np.zeros((rows, cols), dtype=np.float32).tolist(),
+                "hr_map": np.zeros((rows, cols), dtype=np.float32).tolist(),
+                "coherence_map": np.zeros((rows, cols), dtype=np.float32).tolist(),
+                "grid_size": list(grid_size),
+                "mean_ppg_strength": 0.0,
+                "mean_quality": 0.0,
+                "ppg_coverage": 0.0,
+                "status": "INSUFFICIENT_FRAMES",
+            }
+
+        h, w = frames[0].shape[:2]
+        cell_h, cell_w = h // rows, w // cols
+
+        ppg_map = np.zeros((rows, cols), dtype=np.float32)
+        quality_map = np.zeros((rows, cols), dtype=np.float32)
+        hr_map = np.zeros((rows, cols), dtype=np.float32)
+
+        for r in range(rows):
+            for c in range(cols):
+                y1, y2 = r * cell_h, min((r + 1) * cell_h, h)
+                x1, x2 = c * cell_w, min((c + 1) * cell_w, w)
+
+                # Extract green channel signal for this ROI
+                signals = []
+                for frame in frames:
+                    roi = frame[y1:y2, x1:x2]
+                    if roi.size > 0:
+                        green_mean = np.mean(roi[:, :, 1])  # Green channel
+                        signals.append(green_mean)
+
+                if len(signals) < 30:
+                    continue
+
+                signal_arr = np.array(signals, dtype=np.float64)
+                signal_arr = signal_arr - np.mean(signal_arr)  # Detrend
+
+                # FFT for pulse detection
+                fft_vals = np.fft.rfft(signal_arr)
+                freqs = np.fft.rfftfreq(len(signal_arr), d=1.0 / fps)
+
+                # Bandpass: 0.7-4.0 Hz (42-240 BPM)
+                mask = (freqs >= 0.7) & (freqs <= 4.0)
+                if not np.any(mask):
+                    continue
+
+                magnitudes = np.abs(fft_vals)
+                bandpass_mags = magnitudes.copy()
+                bandpass_mags[~mask] = 0
+
+                # Peak frequency -> heart rate
+                peak_idx = np.argmax(bandpass_mags)
+                peak_freq = freqs[peak_idx]
+                estimated_hr = peak_freq * 60
+
+                # Signal quality: ratio of peak energy to total energy
+                peak_energy = bandpass_mags[peak_idx] ** 2
+                total_energy = np.sum(magnitudes ** 2) + 1e-10
+                quality = peak_energy / total_energy
+
+                # PPG strength: normalised peak magnitude
+                ppg_strength = bandpass_mags[peak_idx] / (np.max(magnitudes) + 1e-10)
+
+                ppg_map[r, c] = ppg_strength
+                quality_map[r, c] = min(quality * 5, 1.0)
+                hr_map[r, c] = estimated_hr
+
+        # Coherence map: consistency between adjacent cells
+        coherence_map = np.zeros((rows, cols), dtype=np.float32)
+        for r in range(rows):
+            for c in range(cols):
+                neighbors = []
+                for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    nr, nc = r + dr, c + dc
+                    if 0 <= nr < rows and 0 <= nc < cols:
+                        neighbors.append(ppg_map[nr, nc])
+                if neighbors and ppg_map[r, c] > 0:
+                    coherence_map[r, c] = 1.0 - min(
+                        np.std([ppg_map[r, c]] + neighbors) / (np.mean([ppg_map[r, c]] + neighbors) + 1e-10),
+                        1.0,
+                    )
+
+        return {
+            "ppg_map": ppg_map.tolist(),
+            "quality_map": quality_map.tolist(),
+            "hr_map": hr_map.tolist(),
+            "coherence_map": coherence_map.tolist(),
+            "grid_size": list(grid_size),
+            "mean_ppg_strength": float(np.mean(ppg_map)),
+            "mean_quality": float(np.mean(quality_map)),
+            "ppg_coverage": float(np.mean(ppg_map > 0.1)),
+            "status": "OK",
+        }
+
     def analyze(
         self,
         frames: FrameList,

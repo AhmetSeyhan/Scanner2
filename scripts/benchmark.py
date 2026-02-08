@@ -174,7 +174,7 @@ class BenchmarkRunner:
                 "max_samples": max_samples,
                 "max_frames": max_frames,
                 "timestamp": datetime.utcnow().isoformat(),
-                "scanner_version": "3.2.0",
+                "scanner_version": "4.0.0",
             },
             "samples": [],
             "metrics": {},
@@ -567,6 +567,107 @@ class BenchmarkRunner:
         plt.close()
         print(f"Precision-Recall curve saved to: {pr_path}")
 
+    def run_ablation(self, deps) -> Dict[str, Any]:
+        """
+        Ablation study: measure each core's standalone and fusion-combined performance.
+
+        Produces a table showing individual and combined core contributions.
+        """
+        sk = deps["sklearn"]
+        if not self.results.get("samples"):
+            print("ERROR: Run benchmark first (no samples found)")
+            return {}
+
+        samples = self.results["samples"]
+        y_true = np.array([s["label"] for s in samples])
+
+        configs = {
+            "BIOSIGNAL only": [("biosignal_score", 1.0)],
+            "ARTIFACT only": [("artifact_score", 1.0)],
+            "ALIGNMENT only": [("alignment_score", 1.0)],
+            "BIO + ART": [("biosignal_score", 0.5), ("artifact_score", 0.5)],
+            "BIO + ALIGN": [("biosignal_score", 0.5), ("alignment_score", 0.5)],
+            "ART + ALIGN": [("artifact_score", 0.5), ("alignment_score", 0.5)],
+            "FULL FUSION": [("fusion_score", 1.0)],
+        }
+
+        ablation_results = {}
+        print(f"\n{'='*70}")
+        print(f"  ABLATION STUDY: {self.config['name']}")
+        print(f"{'='*70}")
+        print(f"  {'Config':<22} {'AUC-ROC':>10} {'Accuracy':>10} {'FPR@95TPR':>10}")
+        print(f"{'─'*70}")
+
+        for config_name, score_keys in configs.items():
+            y_scores = np.zeros(len(samples))
+            for key, weight in score_keys:
+                y_scores += np.array([s[key] for s in samples]) * weight
+
+            y_pred = (y_scores >= 0.5).astype(int)
+            auc = float(sk["roc_auc_score"](y_true, y_scores)) if len(np.unique(y_true)) > 1 else 0.0
+            acc = float(sk["accuracy_score"](y_true, y_pred))
+
+            fpr_at_95 = 0.0
+            if len(np.unique(y_true)) > 1:
+                fpr_arr, tpr_arr, _ = sk["roc_curve"](y_true, y_scores)
+                idx = np.argmin(np.abs(tpr_arr - 0.95))
+                fpr_at_95 = float(fpr_arr[idx])
+
+            ablation_results[config_name] = {
+                "auc_roc": auc, "accuracy": acc, "fpr_at_tpr_95": fpr_at_95,
+            }
+            print(f"  {config_name:<22} {auc:>10.4f} {acc:>10.4f} {fpr_at_95:>10.4f}")
+
+        print(f"{'='*70}")
+
+        # Fusion delta (how much fusion improves over best single core)
+        best_single = max(
+            ablation_results[k]["auc_roc"]
+            for k in ["BIOSIGNAL only", "ARTIFACT only", "ALIGNMENT only"]
+        )
+        fusion_auc = ablation_results["FULL FUSION"]["auc_roc"]
+        print(f"\n  Fusion Delta: +{(fusion_auc - best_single):.4f} AUC over best single core")
+
+        self.results["ablation"] = ablation_results
+
+        # Save updated results
+        results_path = self.output_dir / "benchmark_results.json"
+        with open(results_path, "w") as f:
+            json.dump(self.results, f, indent=2, default=str)
+
+        return ablation_results
+
+
+def run_cross_dataset(data_dirs: List[str], output_dir: str, max_samples: int = 100):
+    """Evaluate across multiple datasets - measures generalization."""
+    deps = import_dependencies()
+    sk = deps["sklearn"]
+
+    results_matrix = {}
+    for eval_dir in data_dirs:
+        name = Path(eval_dir).name
+        runner = BenchmarkRunner(
+            dataset_name="custom", data_dir=eval_dir,
+            output_dir=output_dir, max_samples=max_samples,
+        )
+        result = runner.run(deps)
+        results_matrix[name] = result.get("metrics", {})
+
+    # Print generalization matrix
+    print(f"\n{'='*70}")
+    print(f"  CROSS-DATASET GENERALIZATION MATRIX")
+    print(f"{'='*70}")
+    print(f"  {'Dataset':<20} {'AUC-ROC':>10} {'Accuracy':>10} {'F1':>10}")
+    print(f"{'─'*70}")
+    for name, m in results_matrix.items():
+        print(f"  {name:<20} {m.get('auc_roc',0):>10.4f} {m.get('accuracy',0):>10.4f} {m.get('f1_score',0):>10.4f}")
+    print(f"{'='*70}")
+
+    out_path = Path(output_dir) / "cross_dataset_results.json"
+    with open(out_path, "w") as f:
+        json.dump(results_matrix, f, indent=2)
+    print(f"Saved to {out_path}")
+
 
 def generate_plots_from_results(results_path: str, output_dir: str):
     """Generate plots from previously saved benchmark results."""
@@ -627,8 +728,16 @@ Examples:
                         help="Generate plots from saved results JSON")
     parser.add_argument("--quiet", action="store_true",
                         help="Suppress verbose output")
+    parser.add_argument("--ablation", action="store_true",
+                        help="Run ablation study after benchmark")
+    parser.add_argument("--cross_dataset", nargs="+", default=None,
+                        help="Run cross-dataset eval (list of data_dirs)")
 
     args = parser.parse_args()
+
+    if args.cross_dataset:
+        run_cross_dataset(args.cross_dataset, args.output_dir, args.max_samples or 100)
+        return
 
     if args.from_results:
         generate_plots_from_results(args.from_results, args.output_dir)
@@ -649,6 +758,10 @@ Examples:
     )
 
     results = runner.run(deps)
+
+    # Run ablation study if requested
+    if args.ablation:
+        runner.run_ablation(deps)
 
     # Print final metrics as markdown table for README
     metrics = results.get("metrics", {})
