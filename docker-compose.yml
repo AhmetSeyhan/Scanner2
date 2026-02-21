@@ -1,4 +1,4 @@
-# Scanner v3.3.0 - Docker Compose Configuration
+# Scanner v6.0.0 - Docker Compose Configuration
 # Deploys API server, Dashboard, Redis, MinIO, and optional services
 
 version: '3.8'
@@ -156,12 +156,57 @@ services:
     profiles:
       - production
 
+  # Qdrant Vector DB (v6.0.0 - PentaShield Forensic DNA)
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: scanner-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # Prometheus Monitoring (v6.0.0)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: scanner-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # Grafana Dashboard (v6.0.0)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: scanner-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-scanner2026}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    profiles:
+      - production
+
 volumes:
   scanner-temp:
   scanner-data:
   scanner-audit:
   redis-data:
   minio-data:
+  qdrant-data:
+  prometheus-data:
+  grafana-data:
 
 networks:
   default:

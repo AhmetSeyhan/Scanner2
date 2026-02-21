@@ -548,6 +548,15 @@ async def list_threats(current_user: User = Depends(require_read)):
     return {"threats": list_threats(), "total": len(list_threats())}
 
 
+# ==================== v5.0.0 VERSIONED API ====================
+
+try:
+    from api_v1 import router as v1_router
+    app.include_router(v1_router)
+except Exception:
+    pass  # Graceful degradation if v1 module not available
+
+
 # ==================== ENTRY POINT ====================
 
 if __name__ == "__main__":
