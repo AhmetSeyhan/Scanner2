@@ -48,7 +48,7 @@ boto3>=1.34.0
 reportlab>=4.0.0
 
 # Webhooks (Async HTTP)
-httpx>=0.27.0
+httpx>=0.27.0,<0.28.0
 
 # Testing
 pytest>=8.0.0
