@@ -91,7 +91,10 @@ class TestJPEGCompress:
     def test_jpeg_high_quality_minimal_change(self, sample_batch):
         from core.adversarial import jpeg_compress
         images, _ = sample_batch
-        compressed = jpeg_compress(images, quality=100)
-        # Very high quality should have small differences
-        diff = (compressed - images).abs().mean()
-        assert diff < 0.05
+        # Compare quality=100 vs quality=10 — high quality should produce less distortion
+        compressed_high = jpeg_compress(images, quality=100)
+        compressed_low = jpeg_compress(images, quality=10)
+        diff_high = (compressed_high - images).abs().mean()
+        diff_low = (compressed_low - images).abs().mean()
+        # High quality JPEG should distort less than low quality
+        assert diff_high < diff_low

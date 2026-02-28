@@ -17,6 +17,7 @@ os.environ.setdefault("SCANNER_LOG_LEVEL", "WARNING")
 os.environ.setdefault("SCANNER_SECRET_KEY", "test-secret-key")
 os.environ.setdefault("SCANNER_API_KEY", "test-api-key")
 os.environ.setdefault("SCANNER_ADMIN_PASSWORD", "test-admin-pw")
+os.environ.setdefault("SCANNER_VIEWER_PASSWORD", "test-viewer-pw")
 
 from core.forensic_types import (
     VideoProfile, ResolutionTier,
