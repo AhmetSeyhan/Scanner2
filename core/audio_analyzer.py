@@ -17,10 +17,11 @@ Copyright (c) 2026 Scanner Prime Team. All rights reserved.
 """
 
 import os
-import tempfile
 import subprocess
+import tempfile
 from dataclasses import dataclass
 from typing import Optional, Tuple
+
 import numpy as np
 
 # Audio processing imports with fallbacks

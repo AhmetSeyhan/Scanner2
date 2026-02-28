@@ -6,12 +6,13 @@ with automatic fallback to ImageNet weights if specialized weights are unavailab
 """
 
 import os
+from pathlib import Path
+from typing import List, Optional, Tuple
+
+import numpy as np
+import timm
 import torch
 import torch.nn as nn
-import timm
-import numpy as np
-from pathlib import Path
-from typing import List, Tuple, Optional
 
 # Default path for deepfake-trained weights
 DEFAULT_WEIGHTS_PATH = Path(__file__).parent / "weights" / "efficientnet_b0_faceforensics.pth"
@@ -108,8 +109,8 @@ class DeepfakeDetector(nn.Module):
                 weights_loaded = self._load_weights(str(default_path))
 
         if not weights_loaded:
-            print(f"[DeepfakeDetector] Using ImageNet initialization (no deepfake weights found)")
-            print(f"[DeepfakeDetector] Run 'python download_weights.py' to get specialized weights")
+            print("[DeepfakeDetector] Using ImageNet initialization (no deepfake weights found)")
+            print("[DeepfakeDetector] Run 'python download_weights.py' to get specialized weights")
 
     def _load_weights(self, weights_path: str) -> bool:
         """
@@ -140,11 +141,11 @@ class DeepfakeDetector(nn.Module):
             try:
                 self.load_state_dict(state_dict, strict=True)
                 self._weights_source = "faceforensics++"
-                print(f"[DeepfakeDetector] Successfully loaded deepfake-trained weights (strict)")
+                print("[DeepfakeDetector] Successfully loaded deepfake-trained weights (strict)")
                 return True
-            except RuntimeError as e:
+            except RuntimeError:
                 # If strict loading fails, try partial loading
-                print(f"[DeepfakeDetector] Strict loading failed, attempting partial load...")
+                print("[DeepfakeDetector] Strict loading failed, attempting partial load...")
 
                 # Filter to only matching keys
                 model_dict = self.state_dict()
@@ -170,7 +171,7 @@ class DeepfakeDetector(nn.Module):
                     print(f"[DeepfakeDetector] Loaded {len(filtered_dict)}/{len(model_dict)} weight tensors")
                     return True
                 else:
-                    print(f"[DeepfakeDetector] Warning: No compatible weights found in checkpoint")
+                    print("[DeepfakeDetector] Warning: No compatible weights found in checkpoint")
                     return False
 
         except Exception as e:

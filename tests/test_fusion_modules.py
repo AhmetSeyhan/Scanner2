@@ -1,6 +1,5 @@
 """Tests for fusion modules: CrossModalAttention, TemporalConsistency, ConfidenceCalibrator."""
 
-import pytest
 import numpy as np
 
 # ─────────────────────────────────────────────────────────────────────────────

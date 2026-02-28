@@ -25,8 +25,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
 
+from auth import User, require_read, require_write
 from core.logging_config import get_logger
-from auth import get_current_active_user, require_write, require_read, User
 from detectors.base import DetectorInput, DetectorStatus
 from detectors.registry import DetectorRegistry
 from services.history_service import HistoryService

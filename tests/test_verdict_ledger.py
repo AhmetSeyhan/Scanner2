@@ -1,10 +1,12 @@
 """Tests for blockchain-ready verdict ledger."""
 
-import pytest
-import tempfile
-import os
 import json
-from utils.verdict_ledger import VerdictLedger, VerdictBlock
+import os
+import tempfile
+
+import pytest
+
+from utils.verdict_ledger import VerdictBlock, VerdictLedger
 
 
 @pytest.fixture

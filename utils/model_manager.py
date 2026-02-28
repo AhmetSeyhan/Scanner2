@@ -15,8 +15,8 @@ Copyright (c) 2026 Scanner Technologies. All rights reserved.
 import threading
 from typing import Optional
 
-from core.logging_config import get_logger
 from core.exceptions import ModelLoadError
+from core.logging_config import get_logger
 
 logger = get_logger("model_manager")
 

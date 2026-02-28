@@ -3,7 +3,6 @@ Tests for the BaseDetector framework, DetectorResult, DetectorInput,
 enums, and the DetectorRegistry.
 """
 
-import pytest
 from typing import Set
 
 from detectors.base import (
@@ -15,7 +14,6 @@ from detectors.base import (
     DetectorType,
 )
 from detectors.registry import DetectorRegistry
-
 
 # ---------------------------------------------------------------------------
 # Concrete stub for testing

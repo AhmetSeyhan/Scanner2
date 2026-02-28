@@ -1,6 +1,7 @@
 """Tests for TEXT CORE - AI-generated text detection."""
 
 import pytest
+
 from core.text_core import TextCore
 
 

@@ -6,13 +6,13 @@ Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
 import os
-from typing import List, Tuple
+from typing import List
 
 import cv2
 import numpy as np
 
-from core.forensic_types import VideoProfile, ResolutionTier
-from core.exceptions import VideoDecodeError, NoFramesExtractedError
+from core.exceptions import NoFramesExtractedError, VideoDecodeError
+from core.forensic_types import ResolutionTier, VideoProfile
 from core.logging_config import get_logger
 
 logger = get_logger("video_profiler")

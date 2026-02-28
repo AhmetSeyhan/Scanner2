@@ -5,10 +5,10 @@ Business logic for scan history retrieval and statistics.
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
-from core.logging_config import get_logger
 from core.exceptions import ProcessingError
+from core.logging_config import get_logger
 
 logger = get_logger("history_service")
 

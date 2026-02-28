@@ -11,11 +11,12 @@ This module provides a pre-analysis defense layer to detect:
 Copyright (c) 2026 Scanner Prime Team. All rights reserved.
 """
 
-import numpy as np
-import cv2
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
-from core.forensic_types import SanityCheckResult, FrameList
+import cv2
+import numpy as np
+
+from core.forensic_types import FrameList, SanityCheckResult
 
 
 class InputSanityGuard:

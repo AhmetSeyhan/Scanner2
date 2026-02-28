@@ -5,8 +5,9 @@ End-to-end tests for the FastAPI routes.
 
 import os
 import sys
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -40,6 +41,7 @@ class TestPublicEndpoints:
             mock_mm_cls.get_instance.return_value = mock_mm
 
             from fastapi.testclient import TestClient
+
             from api import app
             yield TestClient(app)
 
@@ -71,6 +73,7 @@ class TestAuthEndpoints:
             mock_mm_cls.get_instance.return_value = mock_mm
 
             from fastapi.testclient import TestClient
+
             from api import app
             yield TestClient(app)
 
@@ -122,6 +125,7 @@ class TestProtectedEndpoints:
             mock_mm_cls.get_instance.return_value = mock_mm
 
             from fastapi.testclient import TestClient
+
             from api import app
             yield TestClient(app)
 

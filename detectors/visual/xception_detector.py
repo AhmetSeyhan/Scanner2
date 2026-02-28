@@ -70,8 +70,8 @@ class XceptionDetector(BaseDetector):
         if self._model is not None:
             return
 
-        import torch
         import timm
+        import torch
 
         self._device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -131,8 +131,8 @@ class XceptionDetector(BaseDetector):
                 details={"reason": "No image provided"},
             )
 
-        import torch
         import cv2
+        import torch
 
         self._ensure_model()
 

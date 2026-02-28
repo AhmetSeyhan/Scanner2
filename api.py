@@ -11,57 +11,55 @@ Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
 import os
-import time
 import shutil
 import tempfile
-from datetime import timedelta, datetime, timezone
+import time
 from contextlib import asynccontextmanager
-from typing import Optional
+from datetime import datetime, timedelta, timezone
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Form, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, Response
 
-# --- Structured logging (replaces all print statements) ---
-from core.logging_config import setup_logging, get_logger
-from core.exceptions import ScannerBaseError, VideoUploadError
-
-setup_logging()
-logger = get_logger("api")
+from core.exceptions import ScannerBaseError
+from core.logging_config import get_logger, setup_logging
 
 # --- Rate limiting (graceful degradation) ---
 try:
     from slowapi import Limiter, _rate_limit_exceeded_handler
-    from slowapi.util import get_remote_address
     from slowapi.errors import RateLimitExceeded
+    from slowapi.util import get_remote_address
     RATE_LIMITING_AVAILABLE = True
 except ImportError:
     RATE_LIMITING_AVAILABLE = False
 
 # --- Auth ---
 from auth import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    Token,
+    User,
     authenticate_user,
     create_access_token,
     get_current_active_user,
+    require_admin,
     require_read,
     require_write,
-    require_admin,
-    Token,
-    User,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 
 # --- Services ---
 from services.analysis_service import AnalysisService
-from services.video_profiler import VideoProfiler, ALLOWED_VIDEO_EXTENSIONS, ALLOWED_IMAGE_EXTENSIONS
-from services.report_service import ReportService
 from services.history_service import HistoryService
+from services.report_service import ReportService
+from services.video_profiler import VideoProfiler
+from utils.audit_logger import AuditLogger
 
 # --- Monitoring ---
-from utils.metrics import get_metrics_response, record_request, record_analysis, record_error
-from utils.audit_logger import AuditLogger
+from utils.metrics import get_metrics_response, record_analysis, record_error
 from utils.model_manager import ModelManager
 
+# --- Initialise logging ---
+setup_logging()
+logger = get_logger("api")
 
 # ==================== APPLICATION LIFESPAN ====================
 
@@ -535,8 +533,9 @@ async def verify_verdict_chain(current_user: User = Depends(require_admin)):
 @app.get("/verdict-chain/export", tags=["Forensic"])
 async def export_verdict_chain(current_user: User = Depends(require_admin)):
     """Export full verdict blockchain for external audit. Requires: `admin` scope."""
-    from utils.verdict_ledger import VerdictLedger
     import json
+
+    from utils.verdict_ledger import VerdictLedger
     ledger = VerdictLedger()
     return json.loads(ledger.export_chain())
 

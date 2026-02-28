@@ -5,9 +5,10 @@ Unit tests for services/analysis_service.py
 
 import os
 import sys
-import pytest
+from unittest.mock import MagicMock, patch
+
 import numpy as np
-from unittest.mock import patch, MagicMock
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -24,8 +25,8 @@ class TestAnalysisService:
     @patch("services.analysis_service.ModelManager")
     def test_analyze_image_no_face(self, mock_mm_cls):
         """analyze_image raises NoFaceDetectedError when no face found."""
-        from services.analysis_service import AnalysisService
         from core.exceptions import NoFaceDetectedError
+        from services.analysis_service import AnalysisService
 
         mock_mm = MagicMock()
         mock_mm.face_extractor.extract_primary_face.return_value = None
@@ -73,8 +74,8 @@ class TestVideoProfiler:
 
     def test_validate_extension_video_invalid(self):
         """Invalid extensions raise UnsupportedFileTypeError."""
-        from services.video_profiler import VideoProfiler
         from core.exceptions import UnsupportedFileTypeError
+        from services.video_profiler import VideoProfiler
         profiler = VideoProfiler()
         with pytest.raises(UnsupportedFileTypeError):
             profiler.validate_extension("malware.exe", "video")
@@ -88,8 +89,8 @@ class TestVideoProfiler:
 
     def test_get_resolution_tier(self):
         """Resolution tiers mapped correctly."""
-        from services.video_profiler import get_resolution_tier
         from core.forensic_types import ResolutionTier
+        from services.video_profiler import get_resolution_tier
 
         assert get_resolution_tier(240) == ResolutionTier.ULTRA_LOW
         assert get_resolution_tier(480) == ResolutionTier.LOW

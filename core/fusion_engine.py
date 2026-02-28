@@ -19,18 +19,16 @@ Key Features:
 Copyright (c) 2026 Scanner Prime Team. All rights reserved.
 """
 
-import numpy as np
-from typing import Dict, Tuple, Optional, List
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
 
 from core.forensic_types import (
-    FusionVerdict,
-    BioSignalCoreResult,
-    ArtifactCoreResult,
     AlignmentCoreResult,
-    VideoProfile,
-    ResolutionTier,
+    ArtifactCoreResult,
+    BioSignalCoreResult,
+    FusionVerdict,
     TransparencyReport,
+    VideoProfile,
 )
 
 # Import AudioProfile conditionally to avoid circular imports
@@ -236,7 +234,6 @@ class FusionEngine:
         # Count verdict types
         fail_count = sum(1 for v in verdicts.values() if v == "FAIL")
         pass_count = sum(1 for v in verdicts.values() if v == "PASS")
-        warn_count = sum(1 for v in verdicts.values() if v == "WARN")
 
         # Find highest confidence core
         leading_core = max(confidences, key=confidences.get)

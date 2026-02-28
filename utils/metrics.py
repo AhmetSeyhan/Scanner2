@@ -7,7 +7,6 @@ Exposes /metrics endpoint compatible with Prometheus scraping.
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
-import time
 from typing import Optional
 
 from core.logging_config import get_logger
@@ -16,7 +15,7 @@ logger = get_logger("metrics")
 
 # Try to import prometheus client
 try:
-    from prometheus_client import Counter, Histogram, Gauge, Info, generate_latest, CONTENT_TYPE_LATEST
+    from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, Info, generate_latest
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False

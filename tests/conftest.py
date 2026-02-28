@@ -3,10 +3,11 @@ Scanner Test Suite - Shared Fixtures
 Provides common test data and mocks used across all test modules.
 """
 
-import sys
 import os
-import pytest
+import sys
+
 import numpy as np
+import pytest
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -20,8 +21,11 @@ os.environ.setdefault("SCANNER_ADMIN_PASSWORD", "test-admin-pw")
 os.environ.setdefault("SCANNER_VIEWER_PASSWORD", "test-viewer-pw")
 
 from core.forensic_types import (
-    VideoProfile, ResolutionTier,
-    BioSignalCoreResult, ArtifactCoreResult, AlignmentCoreResult,
+    AlignmentCoreResult,
+    ArtifactCoreResult,
+    BioSignalCoreResult,
+    ResolutionTier,
+    VideoProfile,
 )
 
 

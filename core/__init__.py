@@ -22,32 +22,31 @@ Modules:
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
+from core.alignment_core import AlignmentCore
+from core.artifact_core import ArtifactCore
+from core.audio_analyzer import AudioAnalyzer, AudioProfile, analyze_video_audio
+from core.biosignal_core import BioSignalCore
 from core.forensic_types import (
-    ROIRegion,
-    BiologicalSignal,
-    CoreResult,
-    BioSignalCoreResult,
-    ArtifactCoreResult,
     AlignmentCoreResult,
+    ArtifactCoreResult,
+    BiologicalSignal,
+    BioSignalCoreResult,
+    CoreResult,
     FusionVerdict,
-    VideoProfile,
-    ResolutionTier,
-    TransparencyReport,
+    HeatmapAnalysis,
     # v3.2.0 types
     HeatmapCell,
-    HeatmapAnalysis,
+    ResolutionTier,
+    ROIRegion,
     SanityCheckResult,
     ScanHistoryEntry,
+    TransparencyReport,
+    VideoProfile,
 )
-
-from core.biosignal_core import BioSignalCore
-from core.artifact_core import ArtifactCore
-from core.alignment_core import AlignmentCore
 from core.fusion_engine import FusionEngine, FusionMode, create_fusion_verdict
-from core.audio_analyzer import AudioAnalyzer, AudioProfile, analyze_video_audio
 from core.input_sanity_guard import InputSanityGuard
 from core.text_core import TextCore, TextCoreResult
-from core.threat_registry import ThreatSignature, THREAT_REGISTRY, get_recommended_weights
+from core.threat_registry import THREAT_REGISTRY, ThreatSignature, get_recommended_weights
 
 __all__ = [
     # Types

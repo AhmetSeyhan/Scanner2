@@ -11,14 +11,15 @@ Copyright (c) 2026 Scanner Prime Team. All rights reserved.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+
 import numpy as np
 
 # Forward reference for AudioProfile (defined in audio_analyzer.py)
 if TYPE_CHECKING:
-    from core.audio_analyzer import AudioProfile
+    pass
 
 
 class ResolutionTier(Enum):

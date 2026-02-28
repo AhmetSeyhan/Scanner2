@@ -3,12 +3,10 @@ Scanner Test Suite - Forensic Hash Chain Tests
 Unit tests for utils/forensic_hash.py
 """
 
+import hashlib
 import os
 import sys
-import json
-import hashlib
-import tempfile
-import pytest
+
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

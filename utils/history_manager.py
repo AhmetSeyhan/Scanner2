@@ -9,12 +9,11 @@ Copyright (c) 2026 Scanner Prime Team. All rights reserved.
 """
 
 import sqlite3
-import os
 from datetime import datetime
-from typing import List, Optional, Dict, Any
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from core.forensic_types import ScanHistoryEntry, FusionVerdict
+from core.forensic_types import FusionVerdict, ScanHistoryEntry
 
 
 class HistoryManager:

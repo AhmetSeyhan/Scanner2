@@ -8,10 +8,9 @@ the ARTIFACT CORE and FUSION ENGINE apply threat-specific weights.
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from dataclasses import dataclass
 from enum import Enum
-from datetime import datetime
+from typing import Dict, List, Optional
 
 
 class ThreatCategory(Enum):

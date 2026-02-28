@@ -14,7 +14,7 @@ Copyright (c) 2026 Scanner Technologies. All rights reserved.
 import hashlib
 import json
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
 
 from core.logging_config import get_logger
 

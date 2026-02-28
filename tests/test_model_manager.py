@@ -5,8 +5,7 @@ Unit tests for utils/model_manager.py
 
 import os
 import sys
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -72,9 +71,8 @@ class TestModelManagerLazyLoading:
     @patch("utils.model_manager.get_logger")
     def test_model_load_error_on_import_failure(self, mock_logger):
         """ModelLoadError raised if core import fails."""
-        from core.exceptions import ModelLoadError
 
-        mm = ModelManager.get_instance()
+        ModelManager.get_instance()
 
         with patch.dict("sys.modules", {"core.biosignal_core": None}):
             # This should raise ModelLoadError when trying to import

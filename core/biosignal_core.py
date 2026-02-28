@@ -16,9 +16,9 @@ Key Features:
 Copyright (c) 2026 Scanner Prime Team. All rights reserved.
 """
 
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
-import cv2
-from typing import List, Tuple, Optional, Dict, Any
 
 # Scipy imports with fallback
 try:
@@ -30,12 +30,11 @@ except ImportError:
     from numpy.fft import fft
 
 from core.forensic_types import (
-    ROIRegion,
     BiologicalSignal,
     BioSignalCoreResult,
-    VideoProfile,
-    ResolutionTier,
     FrameList,
+    ROIRegion,
+    VideoProfile,
 )
 
 

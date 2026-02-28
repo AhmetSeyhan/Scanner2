@@ -16,17 +16,17 @@ Key Features:
 Copyright (c) 2026 Scanner Prime Team. All rights reserved.
 """
 
-import numpy as np
+from typing import Dict, List, Optional, Tuple
+
 import cv2
-from typing import List, Tuple, Optional, Dict, Any
+import numpy as np
 
 from core.forensic_types import (
     ArtifactCoreResult,
-    VideoProfile,
-    ResolutionTier,
     FrameList,
-    HeatmapCell,
     HeatmapAnalysis,
+    HeatmapCell,
+    VideoProfile,
 )
 
 
@@ -351,7 +351,6 @@ class ArtifactCore:
                 continue
 
             # Analyze noise in smooth regions
-            smooth_region = gray[smooth_mask]
             high_pass = cv2.Laplacian(gray, cv2.CV_64F)
             smooth_noise = high_pass.flatten()[smooth_mask.flatten()]
 

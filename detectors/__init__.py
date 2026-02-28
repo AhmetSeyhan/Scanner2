@@ -12,11 +12,11 @@ Copyright (c) 2026 Scanner Technologies. All rights reserved.
 
 from detectors.base import (
     BaseDetector,
-    DetectorResult,
-    DetectorInput,
-    DetectorType,
     DetectorCapability,
+    DetectorInput,
+    DetectorResult,
     DetectorStatus,
+    DetectorType,
 )
 from detectors.registry import DetectorRegistry
 

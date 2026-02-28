@@ -3,9 +3,10 @@ Scanner Test Suite - Audit Logger Tests
 Unit tests for utils/audit_logger.py
 """
 
+import json
 import os
 import sys
-import json
+
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -22,7 +23,7 @@ class TestAuditLogger:
 
     def test_creates_log_directory(self, audit_dir):
         """AuditLogger creates its log directory."""
-        al = AuditLogger(log_dir=audit_dir)
+        AuditLogger(log_dir=audit_dir)
         assert os.path.isdir(audit_dir)
 
     def test_log_analysis_request(self, audit_dir):

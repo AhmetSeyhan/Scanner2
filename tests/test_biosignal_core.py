@@ -3,15 +3,16 @@ Unit tests for BIOSIGNAL CORE.
 Tests 32-ROI rPPG biological signal analysis.
 """
 
-import pytest
-import numpy as np
-import sys
 import os
+import sys
+
+import numpy as np
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.biosignal_core import BioSignalCore
-from core.forensic_types import VideoProfile, ResolutionTier
+from core.forensic_types import ResolutionTier, VideoProfile
 
 
 class TestBioSignalCore:

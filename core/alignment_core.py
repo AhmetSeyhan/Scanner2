@@ -16,9 +16,10 @@ Key Features:
 Copyright (c) 2026 Scanner Prime Team. All rights reserved.
 """
 
-import numpy as np
+from typing import Dict, List, Optional, Tuple
+
 import cv2
-from typing import List, Tuple, Optional, Dict, Any
+import numpy as np
 
 # FFT import with fallback
 try:
@@ -30,9 +31,8 @@ except ImportError:
 
 from core.forensic_types import (
     AlignmentCoreResult,
-    VideoProfile,
-    ResolutionTier,
     FrameList,
+    VideoProfile,
 )
 
 

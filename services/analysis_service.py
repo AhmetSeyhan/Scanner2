@@ -15,26 +15,21 @@ Orchestrates the full PRIME HYBRID pipeline:
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
-import os
 import time
-import shutil
-import tempfile
 import uuid
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 import cv2
 import numpy as np
 
 from core.exceptions import (
-    ProcessingError,
-    InputValidationError,
     NoFaceDetectedError,
-    ScannerBaseError,
+    ProcessingError,
 )
 from core.logging_config import get_logger
-from utils.model_manager import ModelManager
-from utils.forensic_hash import ForensicHashChain
 from services.video_profiler import VideoProfiler
+from utils.forensic_hash import ForensicHashChain
+from utils.model_manager import ModelManager
 
 logger = get_logger("analysis_service")
 
@@ -85,7 +80,7 @@ class AnalysisService:
         )
 
         # 1. Forensic hash of original file
-        file_hash = hash_chain.hash_file(video_path)
+        hash_chain.hash_file(video_path)
 
         # 2. Video profiling
         video_profile = self.profiler.profile_video(video_path)

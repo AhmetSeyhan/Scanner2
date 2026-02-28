@@ -23,9 +23,8 @@ External weights are optional and provided for improved deepfake detection accur
 Copyright (c) 2026 Scanner Prime Team. All rights reserved.
 """
 
-import os
-import sys
 import hashlib
+import sys
 import urllib.request
 from pathlib import Path
 
@@ -192,7 +191,7 @@ def download_weights(model_key: str = DEFAULT_MODEL, force: bool = False) -> Pat
         if download_file(url, dest_path):
             return dest_path
 
-    print(f"Failed to download weights from all sources.")
+    print("Failed to download weights from all sources.")
     return None
 
 

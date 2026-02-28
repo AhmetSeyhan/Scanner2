@@ -10,9 +10,10 @@ Produces:
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
+from typing import Any, Dict, Optional
+
 import cv2
 import numpy as np
-from typing import Dict, Any, Optional
 
 
 def render_anomaly_heatmap(

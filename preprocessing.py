@@ -3,11 +3,11 @@ Preprocessing module for deepfake detection.
 Uses MediaPipe Tasks API for ultra-fast face detection and cropping.
 """
 
-import cv2
-import numpy as np
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
+import cv2
 import mediapipe as mp
+import numpy as np
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
@@ -48,7 +48,7 @@ class FaceExtractor:
         # Download model if not present
         if not os.path.exists(model_path):
             url = "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
-            print(f"Downloading face detection model...")
+            print("Downloading face detection model...")
             urllib.request.urlretrieve(url, model_path)
             print(f"Model downloaded to {model_path}")
 

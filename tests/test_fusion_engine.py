@@ -3,20 +3,19 @@ Unit tests for FUSION ENGINE.
 Tests unified decision engine and verdict generation.
 """
 
-import pytest
-import sys
 import os
+import sys
+
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.fusion_engine import FusionEngine, FusionMode
 from core.forensic_types import (
-    BioSignalCoreResult,
-    ArtifactCoreResult,
     AlignmentCoreResult,
-    VideoProfile,
-    ResolutionTier,
+    ArtifactCoreResult,
+    BioSignalCoreResult,
 )
+from core.fusion_engine import FusionEngine, FusionMode
 
 
 class TestFusionEngine:

@@ -3,9 +3,10 @@ Integration tests for FastAPI endpoints.
 Tests authentication, health checks, and error handling.
 """
 
-import pytest
-import sys
 import os
+import sys
+
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -15,6 +16,7 @@ def client():
     """Create test client."""
     try:
         from fastapi.testclient import TestClient
+
         from api import app
         return TestClient(app)
     except Exception:

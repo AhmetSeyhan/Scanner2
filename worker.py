@@ -28,20 +28,19 @@ Requirements:
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
-import os
 import hashlib
 import json
+import os
 import time
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any
+from typing import Any, Dict
 
-from core.logging_config import setup_logging, get_logger
 from core.exceptions import (
+    NoFramesExtractedError,
     ProcessingError,
     VideoDecodeError,
-    NoFramesExtractedError,
-    IntegrityVerificationError,
 )
+from core.logging_config import get_logger, setup_logging
 
 setup_logging()
 logger = get_logger("worker")
@@ -145,7 +144,8 @@ if CELERY_AVAILABLE:
             Analysis result dictionary with integrity hash.
         """
         import cv2
-        from core.forensic_types import VideoProfile, ResolutionTier
+
+        from core.forensic_types import VideoProfile
         from services.video_profiler import get_resolution_tier
         from utils.forensic_hash import ForensicHashChain
 
@@ -160,7 +160,7 @@ if CELERY_AVAILABLE:
 
         try:
             self.update_state(state="PROCESSING", meta={"stage": "hashing_original"})
-            file_hash = hash_chain.hash_file(video_path)
+            hash_chain.hash_file(video_path)
 
             # Profile video
             self.update_state(state="PROCESSING", meta={"stage": "profiling"})

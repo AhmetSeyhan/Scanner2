@@ -8,12 +8,11 @@ import secrets
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import HTTPException, Security, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
+from fastapi import Depends, HTTPException, Security
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
-
 
 # Configuration
 _default_secret = secrets.token_urlsafe(32)

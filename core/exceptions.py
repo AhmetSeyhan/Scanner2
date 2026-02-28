@@ -12,7 +12,7 @@ Provides structured, typed exceptions for:
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 
 class ScannerBaseError(Exception):

@@ -13,12 +13,10 @@ Writes to a dedicated JSON audit log file and optionally to Redis stream.
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
-import os
 import json
-import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from core.logging_config import get_logger
 

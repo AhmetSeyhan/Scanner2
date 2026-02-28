@@ -16,11 +16,12 @@ Usage:
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
+from typing import Optional, Tuple
+
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-import cv2
-from typing import Tuple, Optional
 
 
 def fgsm_attack(

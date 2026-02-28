@@ -5,10 +5,9 @@ PDF report generation and export logic.
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
-from typing import Optional
 
-from core.forensic_types import FusionVerdict
 from core.exceptions import ProcessingError
+from core.forensic_types import FusionVerdict
 from core.logging_config import get_logger
 
 logger = get_logger("report_service")

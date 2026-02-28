@@ -10,7 +10,7 @@ Copyright (c) 2026 Scanner Technologies. All rights reserved.
 from __future__ import annotations
 
 import threading
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 from detectors.base import BaseDetector, DetectorCapability, DetectorType
 

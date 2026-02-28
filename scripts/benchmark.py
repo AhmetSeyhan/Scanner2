@@ -46,15 +46,13 @@ Dataset Directory Structure:
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
-import os
-import sys
-import json
-import time
-import hashlib
 import argparse
-from pathlib import Path
+import json
+import sys
+import time
 from datetime import datetime
-from typing import Dict, List, Tuple, Optional, Any
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -75,9 +73,16 @@ def import_dependencies():
 
     try:
         from sklearn.metrics import (
-            accuracy_score, precision_score, recall_score, f1_score,
-            roc_auc_score, average_precision_score, confusion_matrix,
-            roc_curve, precision_recall_curve, classification_report
+            accuracy_score,
+            average_precision_score,
+            classification_report,
+            confusion_matrix,
+            f1_score,
+            precision_recall_curve,
+            precision_score,
+            recall_score,
+            roc_auc_score,
+            roc_curve,
         )
         deps["sklearn"] = {
             "accuracy_score": accuracy_score,
@@ -248,7 +253,7 @@ class BenchmarkRunner:
         audio_analyzer,
     ) -> Optional[Dict[str, Any]]:
         """Analyze a single video with PRIME HYBRID and return results."""
-        from core.forensic_types import VideoProfile, ResolutionTier
+        from core.forensic_types import ResolutionTier, VideoProfile
 
         frames = self.extract_frames(video_path, cv2_module)
         if len(frames) < 10:
@@ -324,18 +329,18 @@ class BenchmarkRunner:
         sk = deps["sklearn"]
 
         print(f"\n{'='*70}")
-        print(f"  SCANNER BENCHMARK SUITE v3.2.0")
+        print("  SCANNER BENCHMARK SUITE v3.2.0")
         print(f"  Dataset: {self.config['name']}")
         print(f"  Data Directory: {self.data_dir}")
         print(f"{'='*70}\n")
 
         # Initialize cores
         print("Initializing PRIME HYBRID cores...")
-        from core.biosignal_core import BioSignalCore
-        from core.artifact_core import ArtifactCore
         from core.alignment_core import AlignmentCore
-        from core.fusion_engine import FusionEngine
+        from core.artifact_core import ArtifactCore
         from core.audio_analyzer import AudioAnalyzer
+        from core.biosignal_core import BioSignalCore
+        from core.fusion_engine import FusionEngine
 
         biosignal_core = BioSignalCore()
         artifact_core = ArtifactCore()
@@ -655,7 +660,7 @@ def run_cross_dataset(data_dirs: List[str], output_dir: str, max_samples: int = 
 
     # Print generalization matrix
     print(f"\n{'='*70}")
-    print(f"  CROSS-DATASET GENERALIZATION MATRIX")
+    print("  CROSS-DATASET GENERALIZATION MATRIX")
     print(f"{'='*70}")
     print(f"  {'Dataset':<20} {'AUC-ROC':>10} {'Accuracy':>10} {'F1':>10}")
     print(f"{'─'*70}")

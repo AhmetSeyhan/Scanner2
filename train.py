@@ -22,19 +22,18 @@ Dataset Structure (expected):
         └── fake/
 """
 
-import os
 import argparse
-from pathlib import Path
 from datetime import datetime
-from typing import Tuple, Optional
+from pathlib import Path
+from typing import Tuple
 
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
-import cv2
-import numpy as np
 from tqdm import tqdm
 
 from model import DeepfakeDetector

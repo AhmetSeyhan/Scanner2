@@ -13,8 +13,7 @@ Copyright (c) 2026 Scanner Technologies. All rights reserved.
 
 from __future__ import annotations
 
-import time
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, List, Set
 
 import numpy as np
 
@@ -48,8 +47,6 @@ class CLIPFeatureExtractor:
         if self._initialized:
             return
         try:
-            import torch
-            import torch.nn as nn
             # Build a lightweight classifier head
             # In production, this would load fine-tuned weights
             self._classifier = self._build_classifier()
@@ -178,7 +175,6 @@ class CLIPFeatureExtractor:
                 pass
 
         # Statistical fallback: use feature distribution analysis
-        mean_feat = np.mean(features)
         std_feat = np.std(features)
         # Normalized score based on feature statistics
         score = float(np.clip(0.5 + (std_feat - 0.3) * 0.5, 0.0, 1.0))

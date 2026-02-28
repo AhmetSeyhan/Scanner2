@@ -2,12 +2,10 @@
 Tests for the adapter wrappers that bridge existing cores to the BaseDetector interface.
 """
 
-import pytest
 import numpy as np
 
 from detectors.base import DetectorInput, DetectorResult, DetectorStatus, DetectorType
 from detectors.registry import DetectorRegistry
-
 
 # ---------------------------------------------------------------------------
 # BioSignalDetector

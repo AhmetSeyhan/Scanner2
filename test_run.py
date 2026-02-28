@@ -4,8 +4,9 @@ Tests preprocessing, model, and integration without requiring real video files.
 """
 
 import sys
-import numpy as np
+
 import cv2
+import numpy as np
 
 
 def test_preprocessing():
@@ -40,6 +41,7 @@ def test_model():
     print("\n[TEST 2] Testing Model Module...")
 
     import torch
+
     from model import DeepfakeDetector, DeepfakeInference
 
     # Test model architecture
@@ -87,12 +89,12 @@ def test_integration():
     """Test the full pipeline integration."""
     print("\n[TEST 3] Testing Integration...")
 
-    from preprocessing import FaceExtractor, VideoProcessor
     from model import DeepfakeInference
+    from preprocessing import FaceExtractor, VideoProcessor
 
     # Create components
     face_extractor = FaceExtractor()
-    video_processor = VideoProcessor(face_extractor, fps_sample_rate=1)
+    VideoProcessor(face_extractor, fps_sample_rate=1)
     inference = DeepfakeInference()
 
     # Create a mock "frame" and process it
@@ -127,7 +129,6 @@ def test_api_imports():
     print("\n[TEST 4] Testing API Module Imports...")
 
     # Test imports
-    from fastapi import FastAPI
     from api import app
 
     assert app is not None, "FastAPI app not created"
@@ -143,7 +144,7 @@ def test_api_imports():
 
     print(f"  - FastAPI app: OK (title: {app.title})")
     print(f"  - Routes registered: {len(routes)} routes")
-    print(f"  - Key endpoints: /, /health, /analyze-video, /analyze-video-v2, /analyze-image")
+    print("  - Key endpoints: /, /health, /analyze-video, /analyze-video-v2, /analyze-image")
 
     print("[TEST 4] API Module: PASSED")
     return True

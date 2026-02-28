@@ -18,32 +18,31 @@ Features:
 Run with: streamlit run dashboard.py
 """
 
-import streamlit as st
-import streamlit.components.v1 as components
+import hashlib
+import json
+import os
+import queue
+import tempfile
+import threading
+import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
 import cv2
 import numpy as np
-import tempfile
-import os
-import json
-import hashlib
-import threading
-import queue
-import time
-from pathlib import Path
-from typing import List, Tuple, Optional, Dict, Any
-from datetime import datetime
-from dataclasses import dataclass, field
-from enum import Enum
+import streamlit as st
+import streamlit.components.v1 as components
 
 # Scipy imports with fallback
 try:
-    from scipy import signal
-    from scipy.fft import fft
+    import scipy  # noqa: F401
     SCIPY_AVAILABLE = True
 except ImportError:
     SCIPY_AVAILABLE = False
     # Fallback to numpy
-    from numpy.fft import fft
 
 # Must be first Streamlit command
 st.set_page_config(
@@ -54,25 +53,24 @@ st.set_page_config(
 )
 
 # Import our modules
-from preprocessing import FaceExtractor, VideoProcessor
-from model import DeepfakeInference
+from core.alignment_core import AlignmentCore
+from core.artifact_core import ArtifactCore
+from core.audio_analyzer import AudioAnalyzer, AudioProfile
 
 # Import PRIME HYBRID core modules (renamed for IP compliance)
 from core.biosignal_core import BioSignalCore
-from core.artifact_core import ArtifactCore
-from core.alignment_core import AlignmentCore
-from core.fusion_engine import FusionEngine, FusionMode
-from core.audio_analyzer import AudioAnalyzer, AudioProfile
+from core.forensic_types import (
+    FusionVerdict,
+)
+from core.forensic_types import (
+    ResolutionTier as CoreResolutionTier,
+)
 from core.forensic_types import (
     VideoProfile as CoreVideoProfile,
-    ResolutionTier as CoreResolutionTier,
-    FusionVerdict,
-    BioSignalCoreResult,
-    ArtifactCoreResult,
-    AlignmentCoreResult,
-    TransparencyReport,
 )
-
+from core.fusion_engine import FusionEngine
+from model import DeepfakeInference
+from preprocessing import FaceExtractor, VideoProcessor
 
 # ============== RESOLUTION TIERS ==============
 
@@ -1776,7 +1774,7 @@ def analyze_complete(
         frame_results.append((frame_num, prob, label))
 
     primary_analysis = inference_engine.analyze_video_results(frame_results)
-    primary_fake_prob = primary_analysis["average_fake_probability"]
+    _ = primary_analysis["average_fake_probability"]  # unused but kept for API compat
 
     # Run PRIME HYBRID core analysis (now returns tuple with audio profile)
     if log_callback:
@@ -2374,14 +2372,14 @@ def main():
         war_left, war_right = st.columns([1, 1])
 
         with war_left:
-            st.markdown(f'''
+            st.markdown('''
                 <div class="pane-title">
                     <span class="pane-title-icon blue"></span>
                     ANALYSIS ZONE
                 </div>
             ''', unsafe_allow_html=True)
 
-            st.markdown(f'''
+            st.markdown('''
                 <div class="scanner-zone">
                     <div class="liquid-border-wrapper">
                         <div class="liquid-border-inner">
@@ -2395,7 +2393,7 @@ def main():
             ''', unsafe_allow_html=True)
 
         with war_right:
-            st.markdown(f'''
+            st.markdown('''
                 <div class="pane-title">
                     <span class="pane-title-icon orange"></span>
                     INTELLIGENCE LOGS
@@ -2444,7 +2442,7 @@ def main():
             with btn_cols[0]:
                 analyze_clicked = st.button("ANALYZE", type="primary", use_container_width=True)
             with btn_cols[1]:
-                report_clicked = st.button("EXPORT", use_container_width=True)
+                st.button("EXPORT", use_container_width=True)
             with btn_cols[2]:
                 clear_clicked = st.button("CLEAR", use_container_width=True)
             with btn_cols[3]:
@@ -3326,7 +3324,7 @@ def main():
         sentinel_left, sentinel_right = st.columns([1, 1])
 
         with sentinel_left:
-            st.markdown(f'''
+            st.markdown('''
                 <div class="pane-title">
                     <span class="pane-title-icon blue"></span>
                     LIVE FEED
@@ -3348,7 +3346,7 @@ def main():
             ''', unsafe_allow_html=True)
 
         with sentinel_right:
-            st.markdown(f'''
+            st.markdown('''
                 <div class="pane-title">
                     <span class="pane-title-icon orange"></span>
                     THREAT INTELLIGENCE

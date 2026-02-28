@@ -14,10 +14,9 @@ Environment Variables:
 Copyright (c) 2026 Scanner Technologies. All rights reserved.
 """
 
-import os
-import json
 import base64
-import tempfile
+import json
+import os
 
 import boto3
 
