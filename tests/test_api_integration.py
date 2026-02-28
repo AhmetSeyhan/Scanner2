@@ -24,9 +24,10 @@ def client():
 @pytest.fixture
 def auth_headers(client):
     """Get auth headers with valid token."""
+    admin_pw = os.getenv("SCANNER_ADMIN_PASSWORD", "test-admin-pw")
     response = client.post(
         "/auth/token",
-        data={"username": "admin", "password": "test-admin-pw"}
+        data={"username": "admin", "password": admin_pw}
     )
     if response.status_code != 200:
         pytest.skip("Auth not available")
@@ -73,9 +74,10 @@ class TestAuthentication:
 
     def test_login_success(self, client):
         """Test successful login."""
+        admin_pw = os.getenv("SCANNER_ADMIN_PASSWORD", "test-admin-pw")
         response = client.post(
             "/auth/token",
-            data={"username": "admin", "password": "test-admin-pw"}
+            data={"username": "admin", "password": admin_pw}
         )
         assert response.status_code == 200
         data = response.json()

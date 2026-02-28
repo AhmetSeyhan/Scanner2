@@ -76,9 +76,10 @@ class TestAuthEndpoints:
 
     def test_login_success(self, client):
         """POST /auth/token with valid credentials returns JWT."""
+        admin_pw = os.getenv("SCANNER_ADMIN_PASSWORD", "test-admin-pw")
         response = client.post(
             "/auth/token",
-            data={"username": "admin", "password": "test-admin-pw"},
+            data={"username": "admin", "password": admin_pw},
         )
         assert response.status_code == 200
         data = response.json()
@@ -95,9 +96,10 @@ class TestAuthEndpoints:
 
     def test_api_key_auth(self, client):
         """X-API-Key header provides access."""
+        api_key = os.getenv("SCANNER_API_KEY", "test-api-key")
         response = client.get(
             "/auth/me",
-            headers={"X-API-Key": "test-api-key"},
+            headers={"X-API-Key": api_key},
         )
         assert response.status_code == 200
         data = response.json()
@@ -136,8 +138,9 @@ class TestProtectedEndpoints:
     def test_stats_requires_admin(self, client):
         """GET /stats with non-admin scope returns 403."""
         # Use API key (has read+write but not admin)
+        api_key = os.getenv("SCANNER_API_KEY", "test-api-key")
         response = client.get(
             "/stats",
-            headers={"X-API-Key": "test-api-key"},
+            headers={"X-API-Key": api_key},
         )
         assert response.status_code == 403
